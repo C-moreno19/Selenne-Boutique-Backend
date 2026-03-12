@@ -23,4 +23,10 @@ public class CreateUsuarioRequestDto
     public string? Direccion { get; set; }
 
     public int? RoleID { get; set; }
+
+    [MaxLength(100)]
+    public string? Cargo { get; set; }
+
+    [MaxLength(20)]
+    public string? Estado { get; set; }
 }

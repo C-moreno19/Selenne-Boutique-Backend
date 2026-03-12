@@ -9,6 +9,7 @@ public class UsuarioDto
     public string? Documento { get; set; }
     public string? Direccion { get; set; }
     public string? Ciudad { get; set; }
+    public string? Cargo { get; set; }  // Stored in Ciudad field
     public int? RoleID { get; set; }
     public string? RolNombre { get; set; }
     public string Estado { get; set; } = string.Empty;
@@ -24,5 +25,7 @@ public class UpdateUsuarioRequestDto
     public string? Documento { get; set; }
     public string? Direccion { get; set; }
     public string? Ciudad { get; set; }
+    public string? Cargo { get; set; }  // Stored in Ciudad field
     public int? RoleID { get; set; }
+    public string? Estado { get; set; }
 }

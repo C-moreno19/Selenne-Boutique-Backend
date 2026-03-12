@@ -162,3 +162,4 @@ C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.pdb
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.genruntimeconfig.cache
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\ref\SelenneApi.dll
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\SelenneApi.staticwebassets.runtime.json
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.sourcelink.json
