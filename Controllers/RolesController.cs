@@ -26,84 +26,121 @@ public class RolesController : ControllerBase
             .ToListAsync();
         return Ok(ApiResponse<List<RolDto>>.Ok(roles.Select(r => new RolDto
         {
-            RoleID = r.RoleID, Nombre = r.Nombre, Descripcion = r.Descripcion, Estado = r.Estado,
+            RoleID = r.RoleID,
+            Nombre = r.Nombre,
+            Descripcion = r.Descripcion,
+            Estado = r.Estado,
             Permisos = r.RolePermissions.Select(rp => rp.Permission.Nombre).ToList()
         }).ToList()));
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponse<RolDto>>> GetById(int id)
+    [HttpGet("permisos")]
+    public async Task<ActionResult<ApiResponse<List<PermisoDto>>>> GetPermisos()
     {
-        if (!PermissionHelper.HasPermission(User, "roles:ver")) return Forbid();
-        var r = await _db.Roles.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+        var permisos = await _db.Permissions.Where(p => p.Estado == "activo").ToListAsync();
+        return Ok(ApiResponse<List<PermisoDto>>.Ok(permisos.Select(p => new PermisoDto
+        {
+            PermissionID = p.PermissionID,
+            Nombre = p.Nombre
+        }).ToList()));
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ApiResponse<RolDto>>> Update(int id, [FromBody] UpdateRolDto dto)
+    {
+        if (!PermissionHelper.HasPermission(User, "roles:permisos") &&
+            !PermissionHelper.HasPermission(User, "roles:editar")) return Forbid();
+
+        var rol = await _db.Roles
+            .Include(r => r.RolePermissions)
             .FirstOrDefaultAsync(r => r.RoleID == id);
-        if (r == null) return NotFound(ApiResponse<object>.Fail("Rol no encontrado"));
+
+        if (rol == null) return NotFound(ApiResponse<RolDto>.Fail("Rol no encontrado"));
+
+        if (!string.IsNullOrWhiteSpace(dto.Nombre)) rol.Nombre = dto.Nombre;
+        if (dto.Descripcion != null) rol.Descripcion = dto.Descripcion;
+
+        if (dto.PermisoIds != null)
+        {
+            // Eliminar permisos actuales
+            _db.RolePermissions.RemoveRange(rol.RolePermissions);
+
+            // Agregar nuevos permisos
+            foreach (var permId in dto.PermisoIds)
+            {
+                _db.RolePermissions.Add(new RolePermission
+                {
+                    RoleID = rol.RoleID,
+                    PermissionID = permId
+                });
+            }
+        }
+
+        await _db.SaveChangesAsync();
+
+        // Recargar para devolver datos actualizados
+        await _db.Entry(rol).Collection(r => r.RolePermissions).Query()
+            .Include(rp => rp.Permission).LoadAsync();
+
         return Ok(ApiResponse<RolDto>.Ok(new RolDto
         {
-            RoleID = r.RoleID, Nombre = r.Nombre, Descripcion = r.Descripcion, Estado = r.Estado,
-            Permisos = r.RolePermissions.Select(rp => rp.Permission.Nombre).ToList()
+            RoleID = rol.RoleID,
+            Nombre = rol.Nombre,
+            Descripcion = rol.Descripcion,
+            Estado = rol.Estado,
+            Permisos = rol.RolePermissions.Select(rp => rp.Permission.Nombre).ToList()
         }));
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<RolDto>>> Create([FromBody] CreateRolRequestDto dto)
+    public async Task<ActionResult<ApiResponse<RolDto>>> Create([FromBody] CreateRolDto dto)
     {
         if (!PermissionHelper.HasPermission(User, "roles:crear")) return Forbid();
-        if (await _db.Roles.AnyAsync(r => r.Nombre == dto.Nombre))
-            return BadRequest(ApiResponse<object>.Fail("El nombre del rol ya existe"));
 
-        var rol = new Rol { Nombre = dto.Nombre, Descripcion = dto.Descripcion };
+        var rol = new Rol
+        {
+            Nombre = dto.Nombre,
+            Descripcion = dto.Descripcion ?? "",
+            Estado = "activo"
+        };
         _db.Roles.Add(rol);
         await _db.SaveChangesAsync();
 
-        foreach (var permId in dto.PermisoIds)
+        if (dto.PermisoIds != null)
         {
-            if (await _db.Permissions.AnyAsync(p => p.PermissionID == permId))
-                _db.RolePermissions.Add(new RolePermission { RoleID = rol.RoleID, PermissionID = permId });
+            foreach (var permId in dto.PermisoIds)
+            {
+                _db.RolePermissions.Add(new RolePermission
+                {
+                    RoleID = rol.RoleID,
+                    PermissionID = permId
+                });
+            }
+            await _db.SaveChangesAsync();
         }
-        await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = rol.RoleID },
-            ApiResponse<RolDto>.Ok(new RolDto { RoleID = rol.RoleID, Nombre = rol.Nombre }, "Rol creado"));
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponse<RolDto>>> Update(int id, [FromBody] CreateRolRequestDto dto)
-    {
-        if (!PermissionHelper.HasPermission(User, "roles:editar")) return Forbid();
-        var rol = await _db.Roles.Include(r => r.RolePermissions).FirstOrDefaultAsync(r => r.RoleID == id);
-        if (rol == null) return NotFound(ApiResponse<object>.Fail("Rol no encontrado"));
-
-        rol.Nombre = dto.Nombre;
-        rol.Descripcion = dto.Descripcion;
-
-        _db.RolePermissions.RemoveRange(rol.RolePermissions);
-        foreach (var permId in dto.PermisoIds)
+        return Ok(ApiResponse<RolDto>.Ok(new RolDto
         {
-            if (await _db.Permissions.AnyAsync(p => p.PermissionID == permId))
-                _db.RolePermissions.Add(new RolePermission { RoleID = rol.RoleID, PermissionID = permId });
-        }
-        await _db.SaveChangesAsync();
-        return Ok(ApiResponse<RolDto>.Ok(new RolDto { RoleID = rol.RoleID, Nombre = rol.Nombre }, "Rol actualizado"));
+            RoleID = rol.RoleID,
+            Nombre = rol.Nombre,
+            Descripcion = rol.Descripcion,
+            Estado = rol.Estado,
+            Permisos = new List<string>()
+        }));
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
     {
         if (!PermissionHelper.HasPermission(User, "roles:eliminar")) return Forbid();
-        var rol = await _db.Roles.FindAsync(id);
-        if (rol == null) return NotFound(ApiResponse<object>.Fail("Rol no encontrado"));
+
+        var rol = await _db.Roles.Include(r => r.RolePermissions).FirstOrDefaultAsync(r => r.RoleID == id);
+        if (rol == null) return NotFound(ApiResponse<string>.Fail("Rol no encontrado"));
+
+        _db.RolePermissions.RemoveRange(rol.RolePermissions);
         _db.Roles.Remove(rol);
         await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(new { }, "Rol eliminado"));
-    }
 
-    [HttpGet("permisos")]
-    public async Task<ActionResult<ApiResponse<object>>> GetPermisos()
-    {
-        if (!PermissionHelper.HasPermission(User, "roles:permisos")) return Forbid();
-        var permisos = await _db.Permissions.Where(p => p.Estado == "activo")
-            .Select(p => new { p.PermissionID, p.Nombre, p.Descripcion }).ToListAsync();
-        return Ok(ApiResponse<object>.Ok(permisos));
+        return Ok(ApiResponse<string>.Ok("Rol eliminado"));
     }
 }
