@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneApi\\SelenneApi.csproj": {}
+    "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneAPI\\SelenneApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneApi\\SelenneApi.csproj": {
+    "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneAPI\\SelenneApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneApi\\SelenneApi.csproj",
+        "projectUniqueName": "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneAPI\\SelenneApi.csproj",
         "projectName": "SelenneApi",
-        "projectPath": "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneApi\\SelenneApi.csproj",
+        "projectPath": "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneAPI\\SelenneApi.csproj",
         "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneApi\\obj\\",
+        "outputPath": "C:\\Users\\Usuario\\Downloads\\SelenneApi\\SelenneAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -117,19 +117,19 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[8.0.23, 8.0.23]"
+              "version": "[8.0.25, 8.0.25]"
             },
             {
               "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[8.0.23, 8.0.23]"
+              "version": "[8.0.25, 8.0.25]"
             },
             {
               "name": "Microsoft.NETCore.App.Ref",
-              "version": "[8.0.23, 8.0.23]"
+              "version": "[8.0.25, 8.0.25]"
             },
             {
               "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[8.0.23, 8.0.23]"
+              "version": "[8.0.25, 8.0.25]"
             }
           ],
           "frameworkReferences": {
@@ -140,7 +140,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200-preview.0.26103.119/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
