@@ -1,13 +1,6 @@
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.csproj.AssemblyReference.cache
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\rpswa.dswa.cache.json
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.AssemblyInfoInputs.cache
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.AssemblyInfo.cs
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.csproj.CoreCompileInputs.cache
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\Services\appsettings.json
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\SelenneApi.staticwebassets.runtime.json
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\SelenneApi.staticwebassets.endpoints.json
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\SelenneApi.exe
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\SelenneApi.deps.json
@@ -146,6 +139,15 @@ C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\runtimes\win\l
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.csproj.AssemblyReference.cache
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.AssemblyInfoInputs.cache
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.AssemblyInfo.cs
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.csproj.CoreCompileInputs.cache
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.sourcelink.json
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\rjimswa.dswa.cache.json
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
@@ -161,4 +163,3 @@ C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\refint\Selenne
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.pdb
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\SelenneApi.genruntimeconfig.cache
 C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\obj\Debug\net8.0\ref\SelenneApi.dll
-C:\Users\Usuario\Downloads\SelenneApi\SelenneApi\bin\Debug\net8.0\SelenneApi.staticwebassets.runtime.json
