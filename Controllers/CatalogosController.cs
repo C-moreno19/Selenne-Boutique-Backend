@@ -19,6 +19,7 @@ public class ColoresController : ControllerBase
     public ColoresController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Colores.OrderBy(c => c.Nombre).ToListAsync();
@@ -26,6 +27,7 @@ public class ColoresController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Colores.FindAsync(id);
@@ -86,6 +88,7 @@ public class TallasController : ControllerBase
     public TallasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Tallas.OrderBy(t => t.Orden).ThenBy(t => t.Nombre).ToListAsync();
@@ -93,6 +96,7 @@ public class TallasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Tallas.FindAsync(id);
@@ -151,6 +155,7 @@ public class MarcasController : ControllerBase
     public MarcasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Marcas.OrderBy(m => m.Nombre).ToListAsync();
@@ -158,6 +163,7 @@ public class MarcasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Marcas.FindAsync(id);
@@ -220,6 +226,7 @@ public class MaterialesController : ControllerBase
     public MaterialesController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Materiales.OrderBy(m => m.Nombre).ToListAsync();
@@ -227,6 +234,7 @@ public class MaterialesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Materiales.FindAsync(id);
@@ -287,6 +295,7 @@ public class CategoriasController : ControllerBase
     public CategoriasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.CategoriasPrincipales.OrderBy(c => c.Nombre).ToListAsync();
@@ -294,6 +303,7 @@ public class CategoriasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.CategoriasPrincipales.FindAsync(id);
@@ -356,6 +366,7 @@ public class TiposProductoController : ControllerBase
     public TiposProductoController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.TiposProducto.OrderBy(t => t.Nombre).ToListAsync();
@@ -363,6 +374,7 @@ public class TiposProductoController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.TiposProducto.FindAsync(id);
@@ -423,6 +435,7 @@ public class ProveedoresController : ControllerBase
     public ProveedoresController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Proveedores.OrderBy(p => p.Nombre).ToListAsync();
@@ -430,6 +443,7 @@ public class ProveedoresController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Proveedores
@@ -504,6 +518,7 @@ public class ComprasController : ControllerBase
     public ComprasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Compras
@@ -515,6 +530,7 @@ public class ComprasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Compras
@@ -587,6 +603,7 @@ public class VentasController : ControllerBase
     public VentasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? estado = null,
         [FromQuery] DateTime? desde = null,
@@ -605,6 +622,7 @@ public class VentasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Ventas
