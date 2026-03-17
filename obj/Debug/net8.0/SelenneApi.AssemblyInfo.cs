@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SelenneApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dc2e5984a309daff8633fa550d41ba9ac7166859")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ea44eb19d5ecdf1dde7bbb89d11326542a00a3b4")]
 [assembly: System.Reflection.AssemblyProductAttribute("SelenneApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SelenneApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -18,8 +18,10 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=DESKTOP-C9TEJ5U\\SQLEXPRESS;Database=SelenneDB;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -29,7 +31,9 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:SecretKey"]!;
+var jwtKey = builder.Configuration["Jwt:SecretKey"]
+    ?? "SuClaveSecretaMuyLargaAquiAlMenos32CaracteresParaJWT!";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -38,9 +42,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "SelenneApi",
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "SelenneClient",
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
@@ -67,10 +71,10 @@ builder.Services.AddControllers();
 // File upload limit (50MB)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 52428800; // 50MB
+    options.MultipartBodyLengthLimit = 52428800;
 });
 
-// Swagger - siempre activo
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -102,10 +106,8 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Middleware pipeline
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-// Swagger siempre activo (no solo en Development)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -115,7 +117,6 @@ app.UseSwaggerUI(c =>
 
 app.UseCors("AllowFrontend");
 
-// Serve static files from wwwroot (for uploaded images)
 app.UseStaticFiles();
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
 if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
@@ -124,7 +125,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Verify DB connection on startup
 using (var scope = app.Services.CreateScope())
 {
     try
