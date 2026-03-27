@@ -21,7 +21,12 @@ public class UsuariosController : ControllerBase
     private readonly IPermissionService _perms;
 
     public UsuariosController(AppDbContext db, IEmailService email, INotificationService notif, IPermissionService perms)
-    { _db = db; _email = email; _notif = notif; _perms = perms; }
+    {
+        _db = db;
+        _email = email;
+        _notif = notif;
+        _perms = perms;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -39,8 +44,7 @@ public class UsuariosController : ControllerBase
             Estado = u.Estado,
             EmailVerificado = u.EmailVerificado,
             FechaRegistro = u.FechaRegistro,
-            Ciudad = u.Ciudad,
-            Cargo = u.Ciudad
+            Ciudad = u.Ciudad
         }).ToListAsync();
         return Ok(ApiResponse<List<UsuarioDto>>.Ok(list));
     }
@@ -85,7 +89,7 @@ public class UsuariosController : ControllerBase
             Telefono = dto.Telefono,
             Documento = dto.Documento,
             Direccion = dto.Direccion,
-            Ciudad = dto.Cargo,
+            Ciudad = dto.Ciudad,
             RoleID = dto.RoleID,
             Estado = dto.Estado ?? "activo"
         };
@@ -102,6 +106,7 @@ public class UsuariosController : ControllerBase
         if (uid != id && !await _perms.HasPermissionAsync(uid, "usuarios:editar")) return Forbid();
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
+
         if (dto.NombreCompleto != null) u.NombreCompleto = dto.NombreCompleto;
         if (dto.Telefono != null) u.Telefono = dto.Telefono;
         if (dto.Documento != null) u.Documento = dto.Documento;
@@ -109,8 +114,9 @@ public class UsuariosController : ControllerBase
         if (dto.Ciudad != null) u.Ciudad = dto.Ciudad;
         if (dto.RoleID.HasValue) u.RoleID = dto.RoleID;
         if (dto.Estado != null) u.Estado = dto.Estado;
+
         await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(null, "Actualizado"));
+        return Ok(ApiResponse<object>.Ok(new { }, "Actualizado"));
     }
 
     [HttpDelete("{id}")]
@@ -120,14 +126,15 @@ public class UsuariosController : ControllerBase
         if (!await _perms.HasPermissionAsync(uid, "usuarios:eliminar")) return Forbid();
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-        // Remove related data first to avoid FK constraint errors
+
         var tokens = _db.RefreshTokens.Where(t => t.UsuarioID == id);
         _db.RefreshTokens.RemoveRange(tokens);
         var notifs = _db.Notificaciones.Where(n => n.UsuarioID == id);
         _db.Notificaciones.RemoveRange(notifs);
+
         _db.Usuarios.Remove(u);
         await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(null, "Usuario eliminado permanentemente"));
+        return Ok(ApiResponse<object>.Ok(new { }, "Usuario eliminado permanentemente"));
     }
 
     [HttpPost("{id}/bloquear")]
