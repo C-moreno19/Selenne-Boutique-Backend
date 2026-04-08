@@ -21,6 +21,7 @@ public class PedidoDto
     public DateTime? FechaEnvio { get; set; }
     public DateTime? FechaEntrega { get; set; }
     public string? Notas { get; set; }
+    public string? ComprobantePago { get; set; }
     public List<PedidoDetalleDto> Detalles { get; set; } = new();
 }
 

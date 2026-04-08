@@ -26,21 +26,16 @@ public class PedidosController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<List<PedidoDto>>>> GetAll()
     {
-        var userId = User.GetUserId();
-        var hasVer = PermissionHelper.HasPermission(User, "ventas:ver");
-
-        IQueryable<Pedido> query = _db.Pedidos
+        var items = await _db.Pedidos
             .Include(p => p.Detalles).ThenInclude(d => d.Producto)
             .Include(p => p.Detalles).ThenInclude(d => d.Talla)
-            .Include(p => p.Detalles).ThenInclude(d => d.Color);
-
-        if (!hasVer)
-            query = query.Where(p => p.ClienteID == userId);
-
-        var pedidos = await query.OrderByDescending(p => p.FechaPedido).ToListAsync();
-        return Ok(ApiResponse<List<PedidoDto>>.Ok(pedidos.Select(MapToDto).ToList()));
+            .Include(p => p.Detalles).ThenInclude(d => d.Color)
+            .OrderByDescending(p => p.FechaPedido)
+            .ToListAsync();
+        return Ok(ApiResponse<List<PedidoDto>>.Ok(items.Select(MapToDto).ToList()));
     }
 
     [HttpGet("{id}")]
@@ -63,40 +58,40 @@ public class PedidosController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] CrearPedidoRequestDto dto)
     {
-        if (!PermissionHelper.HasPermission(User, "tienda:comprar"))
-            return Forbid();
+        // Obtener userId si está autenticado
+        int userId = 0;
+        try { userId = User.GetUserId(); } catch { }
 
-        var userId = User.GetUserId();
-        var usuario = await _db.Usuarios.FindAsync(userId);
-        if (usuario == null) return Unauthorized();
+        // Usar items del DTO directamente
+        if (dto.Items == null || !dto.Items.Any())
+            return BadRequest(ApiResponse<object>.Fail("Debes incluir al menos un producto"));
 
-        var carritoItems = await _db.Carrito
-            .Include(c => c.Producto)
-            .Where(c => c.UsuarioID == userId)
-            .ToListAsync();
+        // Validar stock y obtener productos
+        var productoIds = dto.Items.Select(i => i.ProductoID).ToList();
+        var productos = await _db.Productos.Where(p => productoIds.Contains(p.ProductoID)).ToListAsync();
 
-        if (!carritoItems.Any())
-            return BadRequest(ApiResponse<object>.Fail("El carrito esta vacio"));
-
-        // Validate stock
-        foreach (var item in carritoItems)
+        foreach (var item in dto.Items)
         {
-            if (item.Producto.Stock < item.Cantidad)
-                return BadRequest(ApiResponse<object>.Fail($"Stock insuficiente para {item.Producto.Nombre}"));
+            var producto = productos.FirstOrDefault(p => p.ProductoID == item.ProductoID);
+            if (producto == null) return BadRequest(ApiResponse<object>.Fail($"Producto {item.ProductoID} no encontrado"));
+            if (producto.Stock < item.Cantidad) return BadRequest(ApiResponse<object>.Fail($"Stock insuficiente para {producto.Nombre}"));
         }
 
-        var subtotal = carritoItems.Sum(c => (c.Producto.PrecioOferta ?? c.Producto.PrecioVenta) * c.Cantidad);
-        var total = subtotal;
+        var subtotal = dto.Items.Sum(i => {
+            var p = productos.First(p => p.ProductoID == i.ProductoID);
+            return (p.PrecioOferta ?? p.PrecioVenta) * i.Cantidad;
+        });
 
         var pedido = new Pedido
         {
-            ClienteID = userId,
-            NombreCliente = usuario.NombreCompleto,
-            EmailCliente = usuario.Email,
-            TelefonoCliente = usuario.Telefono ?? dto.DireccionEnvio,
-            DocumentoCliente = usuario.Documento,
+            ClienteID = userId > 0 ? userId : 1,
+            NombreCliente = dto.NombreCliente,
+            EmailCliente = dto.EmailCliente,
+            TelefonoCliente = dto.TelefonoCliente,
+            DocumentoCliente = dto.DocumentoCliente,
             DireccionEnvio = dto.DireccionEnvio,
             Ciudad = dto.Ciudad,
             CodigoPostal = dto.CodigoPostal,
@@ -106,7 +101,7 @@ public class PedidosController : ControllerBase
             Banco = dto.Banco,
             TipoCuenta = dto.TipoCuenta,
             Subtotal = subtotal,
-            Total = total,
+            Total = subtotal,
             Notas = dto.Notas,
             FechaPedido = DateTime.Now,
             FechaActualizacion = DateTime.Now
@@ -118,35 +113,23 @@ public class PedidosController : ControllerBase
             _db.Pedidos.Add(pedido);
             await _db.SaveChangesAsync();
 
-            // Add details and reduce stock
-            foreach (var item in carritoItems)
+            foreach (var item in dto.Items)
             {
-                var precio = item.Producto.PrecioOferta ?? item.Producto.PrecioVenta;
+                var producto = productos.First(p => p.ProductoID == item.ProductoID);
+                var precio = producto.PrecioOferta ?? producto.PrecioVenta;
                 _db.PedidoDetalles.Add(new PedidoDetalle
                 {
                     PedidoID = pedido.PedidoID,
                     ProductoID = item.ProductoID,
                     Cantidad = item.Cantidad,
                     PrecioUnitario = precio,
-                    Subtotal = precio * item.Cantidad
+                    Subtotal = precio * item.Cantidad,
+                    TallaID = item.TallaID,
+                    ColorID = item.ColorID,
                 });
-
-                item.Producto.Stock -= item.Cantidad;
-
-                _db.StockMovimientos.Add(new StockMovimiento
-                {
-                    ProductoID = item.ProductoID,
-                    Cantidad = -item.Cantidad,
-                    Tipo = "salida",
-                    ReferenciaTipo = "pedido",
-                    ReferenciaID = pedido.PedidoID,
-                    UsuarioID = userId,
-                    Fecha = DateTime.Now
-                });
+                producto.Stock -= item.Cantidad;
             }
 
-            // Clear cart
-            _db.Carrito.RemoveRange(carritoItems);
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
         }
@@ -156,31 +139,18 @@ public class PedidosController : ControllerBase
             throw;
         }
 
-        // Notifications and emails
-        await _notif.CreateAsync(userId, "Pedido creado",
-            $"Tu pedido #{pedido.PedidoID} por ${total:F2} ha sido recibido.", "success", $"pedido:{pedido.PedidoID}");
-
-        _ = _email.SendOrderConfirmationClienteAsync(usuario.Email, usuario.NombreCompleto, pedido.PedidoID, total);
-
-        // Notify admins
-        var adminEmail = _config["Email:FromEmail"];
-        if (!string.IsNullOrEmpty(adminEmail))
-            _ = _email.SendOrderConfirmationAdminAsync(adminEmail, usuario.NombreCompleto, pedido.PedidoID, total);
-
         return CreatedAtAction(nameof(GetById), new { id = pedido.PedidoID },
-            ApiResponse<object>.Ok(new { pedidoId = pedido.PedidoID, total }, "Pedido creado"));
+            ApiResponse<object>.Ok(new { pedidoId = pedido.PedidoID, total = pedido.Total }, "Pedido creado"));
     }
 
     [HttpPut("{id}/estado")]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> UpdateEstado(int id, [FromBody] ActualizarEstadoPedidoDto dto)
     {
-        if (!PermissionHelper.HasPermission(User, "ventas:editar"))
-            return Forbid();
-
         var pedido = await _db.Pedidos.Include(p => p.Cliente).FirstOrDefaultAsync(p => p.PedidoID == id);
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
 
-        var estadosValidos = new[] { "Pendiente", "Aprobada", "En proceso", "Enviado", "Entregado", "Cancelado", "Rechazada", "Completada" };
+        var estadosValidos = new[] { "Pendiente", "Aprobado", "En Proceso", "Completado", "Cancelado", "Rechazado" };
         if (!estadosValidos.Contains(dto.NuevoEstado))
             return BadRequest(ApiResponse<object>.Fail("Estado invalido"));
 
@@ -188,50 +158,76 @@ public class PedidosController : ControllerBase
         if (dto.NumeroGuia != null) pedido.NumeroGuia = dto.NumeroGuia;
         if (dto.Transportadora != null) pedido.Transportadora = dto.Transportadora;
         if (dto.Notas != null) pedido.Notas = dto.Notas;
-        if (dto.NuevoEstado == "Enviado") pedido.FechaEnvio = DateTime.Now;
-        if (dto.NuevoEstado == "Entregado") pedido.FechaEntrega = DateTime.Now;
         pedido.FechaActualizacion = DateTime.Now;
         await _db.SaveChangesAsync();
 
-        await _notif.CreateAsync(pedido.ClienteID, "Pedido actualizado",
-            $"Tu pedido #{id} ahora esta: {dto.NuevoEstado}", "info", $"pedido:{id}");
-
-        _ = _email.SendOrderStatusUpdateAsync(pedido.Cliente.Email, pedido.Cliente.NombreCompleto, id, dto.NuevoEstado);
         return Ok(ApiResponse<object>.Ok(new { estado = dto.NuevoEstado }, "Estado actualizado"));
     }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponse<object>>> Cancel(int id)
+    [HttpPost("{id}/comprobante")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> SubirComprobante(int id, IFormFile archivo)
     {
-        var userId = User.GetUserId();
-        var hasDelete = PermissionHelper.HasPermission(User, "ventas:eliminar");
-
-        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.PedidoID == id);
+        var pedido = await _db.Pedidos.FindAsync(id);
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
-        if (!hasDelete && pedido.ClienteID != userId) return Forbid();
 
-        if (pedido.Estado == "Entregado" || pedido.Estado == "Completada")
-            return BadRequest(ApiResponse<object>.Fail("No se puede cancelar un pedido entregado"));
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
-        pedido.Estado = "Cancelado";
-        pedido.FechaActualizacion = DateTime.Now;
+        var ext = Path.GetExtension(archivo.FileName);
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsPath, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+            await archivo.CopyToAsync(stream);
+
+        pedido.ComprobantePago = $"/uploads/{fileName}";
         await _db.SaveChangesAsync();
 
-        return Ok(ApiResponse<object>.Ok(new { }, "Pedido cancelado"));
+        return Ok(ApiResponse<object>.Ok(new { url = pedido.ComprobantePago }));
+    }
+
+    [HttpDelete("{id}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    {
+        var pedido = await _db.Pedidos.Include(p => p.Detalles).FirstOrDefaultAsync(p => p.PedidoID == id);
+        if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
+        _db.PedidoDetalles.RemoveRange(pedido.Detalles);
+        _db.Pedidos.Remove(pedido);
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok("Pedido eliminado"));
     }
 
     private static PedidoDto MapToDto(Pedido p) => new()
     {
-        PedidoID = p.PedidoID, ClienteID = p.ClienteID, FechaPedido = p.FechaPedido,
-        NombreCliente = p.NombreCliente, EmailCliente = p.EmailCliente, TelefonoCliente = p.TelefonoCliente,
-        DireccionEnvio = p.DireccionEnvio, Ciudad = p.Ciudad, MetodoPago = p.MetodoPago,
-        Subtotal = p.Subtotal, Descuento = p.Descuento, Envio = p.Envio, Total = p.Total,
-        Estado = p.Estado, NumeroGuia = p.NumeroGuia, Transportadora = p.Transportadora,
+        PedidoID = p.PedidoID,
+        ClienteID = p.ClienteID,
+        FechaPedido = p.FechaPedido,
+        NombreCliente = p.NombreCliente,
+        EmailCliente = p.EmailCliente,
+        TelefonoCliente = p.TelefonoCliente,
+        DireccionEnvio = p.DireccionEnvio,
+        Ciudad = p.Ciudad,
+        MetodoPago = p.MetodoPago,
+        Subtotal = p.Subtotal,
+        Descuento = p.Descuento,
+        Envio = p.Envio,
+        Total = p.Total,
+        Estado = p.Estado,
+        NumeroGuia = p.NumeroGuia,
+        Transportadora = p.Transportadora,
+        ComprobantePago = p.ComprobantePago,
+        Notas = p.Notas,
         Detalles = p.Detalles?.Select(d => new PedidoDetalleDto
         {
-            ProductoID = d.ProductoID, ProductoNombre = d.Producto?.Nombre ?? "",
-            Talla = d.Talla?.Nombre, Color = d.Color?.Nombre,
-            Cantidad = d.Cantidad, PrecioUnitario = d.PrecioUnitario, Subtotal = d.Subtotal
+            ProductoID = d.ProductoID,
+            ProductoNombre = d.Producto?.Nombre ?? "",
+            Talla = d.Talla?.Nombre,
+            Color = d.Color?.Nombre,
+            Cantidad = d.Cantidad,
+            PrecioUnitario = d.PrecioUnitario,
+            Subtotal = d.Subtotal
         }).ToList() ?? new()
     };
 }
