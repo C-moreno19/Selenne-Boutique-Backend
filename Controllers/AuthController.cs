@@ -93,6 +93,15 @@ public class AuthController : ControllerBase
         return Ok(BCrypt.Net.BCrypt.HashPassword(pass));
     }
 
+    [HttpGet("permisos")]
+    [Authorize]
+    public async Task<IActionResult> GetMisPermisos([FromServices] IPermissionService perms)
+    {
+        var uid = User.GetUserId();
+        var lista = await perms.GetUserPermissionsAsync(uid);
+        return Ok(ApiResponse<List<string>>.Ok(lista));
+    }
+
     [HttpPost("change-password")]
     [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
