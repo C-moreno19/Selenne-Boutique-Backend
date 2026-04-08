@@ -72,6 +72,7 @@ public class Pedido
     public DateTime? FechaEnvio { get; set; }
     public DateTime? FechaEntrega { get; set; }
     public string? Notas { get; set; }
+    public string? ComprobantePago { get; set; }
     public DateTime FechaActualizacion { get; set; } = DateTime.Now;
 
     [ForeignKey("ClienteID")]

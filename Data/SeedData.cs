@@ -11,7 +11,9 @@ public static class SeedData
         {
             var perms = new[]
             {
+                "admin:dashboard",
                 "productos:ver","productos:crear","productos:editar","productos:eliminar","productos:descuento",
+                "compras:ver","compras:crear","compras:editar","compras:eliminar",
                 "ventas:ver","ventas:crear","ventas:editar","ventas:eliminar","ventas:devoluciones","ventas:reportes",
                 "clientes:ver","clientes:crear","clientes:editar","clientes:eliminar","clientes:bloquear","clientes:historial",
                 "inventario:ver","inventario:actualizar","inventario:ajustes","inventario:alertas","inventario:reportes",
@@ -25,6 +27,33 @@ public static class SeedData
             foreach (var p in perms)
                 context.Permissions.Add(new Permission { Nombre = p, Descripcion = p });
             await context.SaveChangesAsync();
+        }
+
+        // Agregar permisos nuevos de forma segura en bases de datos existentes
+        {
+            var todosLosPermisos = new[]
+            {
+                "admin:dashboard",
+                "productos:ver","productos:crear","productos:editar","productos:eliminar","productos:descuento",
+                "compras:ver","compras:crear","compras:editar","compras:eliminar",
+                "ventas:ver","ventas:crear","ventas:editar","ventas:eliminar","ventas:devoluciones","ventas:reportes",
+                "clientes:ver","clientes:crear","clientes:editar","clientes:eliminar","clientes:bloquear","clientes:historial",
+                "inventario:ver","inventario:actualizar","inventario:ajustes","inventario:alertas","inventario:reportes",
+                "usuarios:ver","usuarios:crear","usuarios:editar","usuarios:eliminar","usuarios:bloquear","usuarios:resetear_pass",
+                "roles:ver","roles:crear","roles:editar","roles:eliminar","roles:permisos","roles:asignar",
+                "reportes:ventas","reportes:inventario","reportes:clientes","reportes:financiero","reportes:descargar","reportes:customizar",
+                "notif:ver","notif:enviar","notif:templates","notif:historial",
+                "config:sistema","config:empresa","config:email","config:integraciones","config:auditoria","config:backup",
+                "tienda:ver","tienda:comprar","tienda:carrito","tienda:pedidos","tienda:ofertas"
+            };
+            var existentes = context.Permissions.Select(p => p.Nombre).ToHashSet();
+            bool cambios = false;
+            foreach (var nombre in todosLosPermisos.Where(n => !existentes.Contains(n)))
+            {
+                context.Permissions.Add(new Permission { Nombre = nombre, Descripcion = nombre });
+                cambios = true;
+            }
+            if (cambios) await context.SaveChangesAsync();
         }
 
         // Seed roles

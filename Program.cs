@@ -19,7 +19,7 @@ builder.Host.UseSerilog();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=DESKTOP-C9TEJ5U\\SQLEXPRESS;Database=SelenneDB;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;";
+    ?? "Server=localhost\\SQLEXPRESS;Database=SelenneDB;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;";
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -66,7 +66,12 @@ builder.Services.AddCors(options =>
 });
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // File upload limit (50MB)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
@@ -132,7 +137,11 @@ using (var scope = app.Services.CreateScope())
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var canConnect = await db.Database.CanConnectAsync();
         if (canConnect)
+        {
             Log.Information("Database connection successful");
+            await SeedData.SeedAsync(db);
+            Log.Information("Seed data applied");
+        }
         else
             Log.Warning("Cannot connect to database - check connection string");
     }

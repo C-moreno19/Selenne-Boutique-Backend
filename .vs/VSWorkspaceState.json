@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Controllers"
   ],
-  "SelectedNode": "\\SelenneApi",
+  "SelectedNode": "\\appsettings.Development.json",
   "PreviewInSolutionExplorer": false
 }
