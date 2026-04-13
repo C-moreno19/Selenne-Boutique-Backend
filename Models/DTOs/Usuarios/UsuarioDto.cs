@@ -13,6 +13,7 @@ public class UsuarioDto
     public string? RolNombre { get; set; }
     public string Estado { get; set; } = string.Empty;
     public bool EmailVerificado { get; set; }
+    public bool NotificacionesEmail { get; set; }
     public DateTime FechaRegistro { get; set; }
     public DateTime? FechaUltimoLogin { get; set; }
 }
@@ -26,4 +27,5 @@ public class UpdateUsuarioRequestDto
     public string? Ciudad { get; set; }
     public int? RoleID { get; set; }
     public string? Estado { get; set; }
+    public bool? NotificacionesEmail { get; set; }
 }

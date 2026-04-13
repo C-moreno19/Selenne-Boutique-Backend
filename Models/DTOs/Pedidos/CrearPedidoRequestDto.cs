@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SelenneApi.Models.DTOs.Pedidos;
 
@@ -47,6 +48,8 @@ public class PedidoItemDto
 
     public int? TallaID { get; set; }
     public int? ColorID { get; set; }
+    public string? TallaNombre { get; set; }
+    public string? ColorNombre { get; set; }
 }
 
 public class ActualizarEstadoPedidoDto
@@ -56,4 +59,16 @@ public class ActualizarEstadoPedidoDto
     public string? NumeroGuia { get; set; }
     public string? Transportadora { get; set; }
     public string? Notas { get; set; }
+}
+
+public class EnviarEmailPagoDto
+{
+    public string? Mensaje { get; set; }
+}
+
+public class EnviarEmailGuiaDto
+{
+    public string? NumeroGuia { get; set; }
+    public string? Transportadora { get; set; }
+    public IFormFile? Foto { get; set; }
 }

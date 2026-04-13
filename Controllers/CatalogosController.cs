@@ -523,7 +523,7 @@ public class ComprasController : ControllerBase
         var result = items.Select(c => new {
             compraID = c.CompraID,
             proveedorID = c.ProveedorID,
-            proveedor = c.Proveedor == null ? null : new { nombre = c.Proveedor.Nombre },
+            proveedor = c.Proveedor == null ? null : new { nombre = c.Proveedor.Nombre, documento = c.Proveedor.Documento },
             ordenFactura = c.OrdenFactura,
             fecha = c.Fecha,
             total = c.Total,
@@ -555,7 +555,7 @@ public class ComprasController : ControllerBase
         {
             compraID = c.CompraID,
             proveedorID = c.ProveedorID,
-            proveedor = c.Proveedor == null ? null : new { nombre = c.Proveedor.Nombre },
+            proveedor = c.Proveedor == null ? null : new { nombre = c.Proveedor.Nombre, documento = c.Proveedor.Documento },
             ordenFactura = c.OrdenFactura,
             fecha = c.Fecha,
             total = c.Total,
@@ -590,6 +590,23 @@ public class ComprasController : ControllerBase
         };
         _db.Compras.Add(compra);
         await _db.SaveChangesAsync();
+
+        if (dto.Detalles != null && dto.Detalles.Count > 0)
+        {
+            foreach (var d in dto.Detalles)
+            {
+                _db.CompraDetalles.Add(new CompraDetalle
+                {
+                    CompraID = compra.CompraID,
+                    ProductoID = d.ProductoID,
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario,
+                    Total = d.Total
+                });
+            }
+            await _db.SaveChangesAsync();
+        }
+
         return Ok(ApiResponse<object>.Ok(new { compraID = compra.CompraID }));
     }
 
@@ -630,6 +647,14 @@ public class ComprasController : ControllerBase
     }
 }
 
+public class CompraDetalleDto
+{
+    public int ProductoID { get; set; }
+    public int Cantidad { get; set; }
+    public decimal PrecioUnitario { get; set; }
+    public decimal Total { get; set; }
+}
+
 public class CompraDto
 {
     public int ProveedorID { get; set; }
@@ -637,6 +662,7 @@ public class CompraDto
     public DateTime? Fecha { get; set; }
     public decimal Total { get; set; }
     public string? Notas { get; set; }
+    public List<CompraDetalleDto>? Detalles { get; set; }
 }
 
 // ─────────────────────────────────────────────
