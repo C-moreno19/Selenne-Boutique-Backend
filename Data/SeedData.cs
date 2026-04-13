@@ -93,20 +93,7 @@ public static class SeedData
             await context.SaveChangesAsync();
         }
 
-        // Seed admin user
-        if (!context.Usuarios.Any(u => u.Email == "admin@selenne.com"))
-        {
-            var adminRole = context.Roles.First(r => r.Nombre == "Administrador");
-            context.Usuarios.Add(new Usuario
-            {
-                NombreCompleto = "Administrador Selenne",
-                Email = "admin@selenne.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin1234!"),
-                RoleID = adminRole.RoleID,
-                Estado = "activo",
-                EmailVerificado = true
-            });
-            await context.SaveChangesAsync();
-        }
+        // Nota: el usuario administrador ya no se crea automáticamente.
+        // Créalo manualmente desde el dashboard de usuarios.
     }
 }

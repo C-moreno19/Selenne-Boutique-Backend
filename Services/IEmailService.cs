@@ -10,4 +10,7 @@ public interface IEmailService
     Task SendOrderConfirmationClienteAsync(string to, string nombre, int pedidoId, decimal total);
     Task SendOrderConfirmationAdminAsync(string adminEmail, string clienteNombre, int pedidoId, decimal total);
     Task SendOrderStatusUpdateAsync(string to, string nombre, int pedidoId, string nuevoEstado);
+    Task SendOrderApprovedAsync(string to, string nombre, int pedidoId, decimal total, string confirmarUrl);
+    Task SendPendingPaymentEmailAsync(string to, string nombre, int pedidoId, decimal total, string mensaje, string banco, string cuenta, string titular, string tipoCuenta);
+    Task SendShippingNotificationEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, string? fotoUrl);
 }
