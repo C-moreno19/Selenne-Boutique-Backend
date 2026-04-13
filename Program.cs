@@ -59,10 +59,17 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+        policy.SetIsOriginAllowed(origin =>
+        {
+            var uri = new Uri(origin);
+            // Permite cualquier puerto de localhost (para desarrollo web/móvil)
+            if (uri.Host == "localhost" || uri.Host == "127.0.0.1") return true;
+            // Permite los orígenes configurados en appsettings
+            return allowedOrigins.Contains(origin);
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
 });
 
 // Controllers

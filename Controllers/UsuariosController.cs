@@ -69,6 +69,7 @@ public class UsuariosController : ControllerBase
             RolNombre = u.Rol?.Nombre,
             Estado = u.Estado,
             EmailVerificado = u.EmailVerificado,
+            NotificacionesEmail = u.NotificacionesEmail,
             FechaRegistro = u.FechaRegistro,
             FechaUltimoLogin = u.FechaUltimoLogin
         }));
@@ -114,6 +115,7 @@ public class UsuariosController : ControllerBase
         if (dto.Ciudad != null) u.Ciudad = dto.Ciudad;
         if (dto.RoleID.HasValue) u.RoleID = dto.RoleID;
         if (dto.Estado != null) u.Estado = dto.Estado;
+        if (dto.NotificacionesEmail.HasValue) u.NotificacionesEmail = dto.NotificacionesEmail.Value;
 
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { }, "Actualizado"));
