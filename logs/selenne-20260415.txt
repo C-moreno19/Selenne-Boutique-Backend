@@ -1,0 +1,658 @@
+2026-04-15 10:32:13.707 -05:00 [INF] Executed DbCommand (104ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-15 10:32:13.913 -05:00 [INF] Database connection successful
+2026-04-15 10:32:15.467 -05:00 [INF] Executed DbCommand (1,058ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Permissions] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 10:32:15.643 -05:00 [INF] Executed DbCommand (48ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[Nombre]
+FROM [Permissions] AS [p]
+2026-04-15 10:32:15.712 -05:00 [INF] Executed DbCommand (50ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Roles] AS [r]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 10:32:15.748 -05:00 [INF] Executed DbCommand (29ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [RolePermissions] AS [r]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 10:32:15.789 -05:00 [INF] Seed data applied
+2026-04-15 10:32:15.824 -05:00 [INF] Selenne API starting on http://localhost:5000
+2026-04-15 10:32:15.870 -05:00 [INF] Swagger UI: http://localhost:5000/swagger
+2026-04-15 10:32:15.995 -05:00 [INF] User profile is available. Using 'C:\Users\Usuario\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-15 10:32:16.505 -05:00 [INF] Now listening on: http://localhost:5000
+2026-04-15 10:32:16.867 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-15 10:32:17.378 -05:00 [INF] Hosting environment: Production
+2026-04-15 10:32:17.738 -05:00 [INF] Content root path: C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend
+2026-04-15 10:35:17.508 -05:00 [INF] Application is shutting down...
+2026-04-15 10:48:53.117 -05:00 [INF] Executed DbCommand (53ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-15 10:48:53.237 -05:00 [INF] Database connection successful
+2026-04-15 10:48:53.648 -05:00 [INF] Executed DbCommand (118ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Permissions] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 10:48:53.693 -05:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[Nombre]
+FROM [Permissions] AS [p]
+2026-04-15 10:48:53.704 -05:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Roles] AS [r]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 10:48:53.714 -05:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [RolePermissions] AS [r]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 10:48:53.718 -05:00 [INF] Seed data applied
+2026-04-15 10:48:53.723 -05:00 [INF] Selenne API starting on http://localhost:5000
+2026-04-15 10:48:53.725 -05:00 [INF] Swagger UI: http://localhost:5000/swagger
+2026-04-15 10:48:53.750 -05:00 [INF] User profile is available. Using 'C:\Users\Usuario\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-15 10:48:53.915 -05:00 [INF] Now listening on: http://localhost:5000
+2026-04-15 10:48:53.918 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-15 10:48:53.920 -05:00 [INF] Hosting environment: Production
+2026-04-15 10:48:53.921 -05:00 [INF] Content root path: C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend
+2026-04-15 10:50:19.186 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/auth/login - null null
+2026-04-15 10:50:19.350 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:19.369 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/auth/login - 204 null null 192.5449ms
+2026-04-15 10:50:19.390 -05:00 [INF] Request starting HTTP/1.1 POST http://127.0.0.1:5000/api/auth/login - application/json 54
+2026-04-15 10:50:19.414 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:19.550 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.AuthController.Login (SelenneApi)'
+2026-04-15 10:50:19.703 -05:00 [INF] Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(SelenneApi.Models.DTOs.Auth.LoginRequestDto) on controller SelenneApi.Controllers.AuthController (SelenneApi).
+2026-04-15 10:50:20.668 -05:00 [INF] Executed DbCommand (174ms) [Parameters=[@__dto_Email_0='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[UsuarioID], [u].[Ciudad], [u].[Direccion], [u].[Documento], [u].[Email], [u].[EmailVerificado], [u].[Estado], [u].[FechaRegistro], [u].[FechaUltimoLogin], [u].[NombreCompleto], [u].[NotificacionesEmail], [u].[PasswordHash], [u].[RoleID], [u].[Telefono], [r].[RoleID], [r].[Descripcion], [r].[Estado], [r].[Nombre]
+FROM [Usuarios] AS [u]
+LEFT JOIN [Roles] AS [r] ON [u].[RoleID] = [r].[RoleID]
+WHERE [u].[Email] = @__dto_Email_0
+2026-04-15 10:50:21.431 -05:00 [INF] Executed DbCommand (44ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (Size = 100), @p2='?' (Size = 50), @p3='?' (DbType = Boolean), @p4='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [LoginAttempts] ([AttemptAt], [Email], [IPAddress], [Successful], [UsuarioID])
+OUTPUT INSERTED.[AttemptID]
+VALUES (@p0, @p1, @p2, @p3, @p4);
+2026-04-15 10:50:21.533 -05:00 [INF] Executed DbCommand (65ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime2)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [Usuarios] SET [FechaUltimoLogin] = @p0
+WHERE [UsuarioID] = @p1;
+SELECT @@ROWCOUNT;
+2026-04-15 10:50:21.558 -05:00 [INF] Executed DbCommand (8ms) [Parameters=[@__usuarioId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[UsuarioID], [u].[Ciudad], [u].[Direccion], [u].[Documento], [u].[Email], [u].[EmailVerificado], [u].[Estado], [u].[FechaRegistro], [u].[FechaUltimoLogin], [u].[NombreCompleto], [u].[NotificacionesEmail], [u].[PasswordHash], [u].[RoleID], [u].[Telefono], [r].[RoleID], [r].[Descripcion], [r].[Estado], [r].[Nombre]
+FROM [Usuarios] AS [u]
+LEFT JOIN [Roles] AS [r] ON [u].[RoleID] = [r].[RoleID]
+WHERE [u].[UsuarioID] = @__usuarioId_0
+2026-04-15 10:50:21.580 -05:00 [INF] Executed DbCommand (6ms) [Parameters=[@__usuario_RoleID_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[Nombre]
+FROM [RolePermissions] AS [r]
+INNER JOIN [Permissions] AS [p] ON [r].[PermissionID] = [p].[PermissionID]
+WHERE [r].[RoleID] = @__usuario_RoleID_0
+2026-04-15 10:50:21.702 -05:00 [INF] Executed DbCommand (16ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (DbType = DateTime2), @p2='?' (Size = 50), @p3='?' (DbType = Boolean), @p4='?' (DbType = DateTime2), @p5='?' (Size = 500), @p6='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [RefreshTokens] ([CreatedAt], [ExpiresAt], [IPAddress], [Revoked], [RevokedAt], [Token], [UsuarioID])
+OUTPUT INSERTED.[RefreshTokenID]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+2026-04-15 10:50:21.722 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[SelenneApi.Models.DTOs.Auth.TokenResponseDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-15 10:50:21.761 -05:00 [INF] Executed action SelenneApi.Controllers.AuthController.Login (SelenneApi) in 2045.8936ms
+2026-04-15 10:50:21.763 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.AuthController.Login (SelenneApi)'
+2026-04-15 10:50:21.769 -05:00 [INF] Request finished HTTP/1.1 POST http://127.0.0.1:5000/api/auth/login - 200 null application/json; charset=utf-8 2379.8527ms
+2026-04-15 10:50:21.790 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/favoritos - null null
+2026-04-15 10:50:21.791 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/notificaciones - null null
+2026-04-15 10:50:21.792 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/pedidos - null null
+2026-04-15 10:50:21.794 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:21.795 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:21.798 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:21.800 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/favoritos - 204 null null 10.0113ms
+2026-04-15 10:50:21.801 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/notificaciones - 204 null null 10.0251ms
+2026-04-15 10:50:21.803 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/pedidos - 204 null null 10.4271ms
+2026-04-15 10:50:21.808 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/favoritos - application/json null
+2026-04-15 10:50:21.812 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/notificaciones - application/json null
+2026-04-15 10:50:21.815 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/pedidos - application/json null
+2026-04-15 10:50:21.826 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:21.826 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:21.826 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:21.892 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.PedidosController.GetAll (SelenneApi)'
+2026-04-15 10:50:21.896 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi)'
+2026-04-15 10:50:21.897 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi)'
+2026-04-15 10:50:21.902 -05:00 [INF] Route matched with {action = "GetAll", controller = "Pedidos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[SelenneApi.Models.DTOs.Pedidos.PedidoDto]]]] GetAll() on controller SelenneApi.Controllers.PedidosController (SelenneApi).
+2026-04-15 10:50:21.905 -05:00 [INF] Route matched with {action = "GetAll", controller = "Notificaciones"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[SelenneApi.Models.DTOs.Notificaciones.NotificacionDto]]]] GetAll() on controller SelenneApi.Controllers.NotificacionesController (SelenneApi).
+2026-04-15 10:50:21.909 -05:00 [INF] Route matched with {action = "GetFavoritos", controller = "Favoritos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[System.Int32]]]] GetFavoritos() on controller SelenneApi.Controllers.FavoritosController (SelenneApi).
+2026-04-15 10:50:22.048 -05:00 [INF] Executed DbCommand (11ms) [Parameters=[@__userId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [f].[ProductoID]
+FROM [Favoritos] AS [f]
+WHERE [f].[UsuarioID] = @__userId_0
+2026-04-15 10:50:22.058 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:50:22.068 -05:00 [INF] Executed action SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi) in 142.3575ms
+2026-04-15 10:50:22.071 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi)'
+2026-04-15 10:50:22.073 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/favoritos - 200 null application/json; charset=utf-8 264.6933ms
+2026-04-15 10:50:22.106 -05:00 [INF] Executed DbCommand (43ms) [Parameters=[@__userId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [n].[NotificacionID], [n].[Titulo], [n].[Mensaje], [n].[Tipo], [n].[Leida], [n].[FechaCreacion], [n].[Referencia]
+FROM [Notificaciones] AS [n]
+WHERE [n].[UsuarioID] = @__userId_0
+ORDER BY [n].[FechaCreacion] DESC
+2026-04-15 10:50:22.111 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Notificaciones.NotificacionDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:50:22.122 -05:00 [INF] Executed action SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi) in 207.7557ms
+2026-04-15 10:50:22.124 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi)'
+2026-04-15 10:50:22.126 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/notificaciones - 200 null application/json; charset=utf-8 314.1027ms
+2026-04-15 10:50:22.147 -05:00 [INF] Executed DbCommand (51ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[PedidoID], [p].[Banco], [p].[Ciudad], [p].[ClienteID], [p].[CodigoPostal], [p].[ComprobantePago], [p].[ConfirmacionToken], [p].[Descuento], [p].[DireccionEnvio], [p].[DocumentoCliente], [p].[EmailCliente], [p].[Envio], [p].[Estado], [p].[FechaActualizacion], [p].[FechaEntrega], [p].[FechaEnvio], [p].[FechaPedido], [p].[MetodoPago], [p].[NombreCliente], [p].[NombreTitular], [p].[Notas], [p].[NumeroCuenta], [p].[NumeroGuia], [p].[Subtotal], [p].[TelefonoCliente], [p].[TipoCuenta], [p].[Total], [p].[Transportadora], [t0].[PedidoDetalleID], [t0].[Cantidad], [t0].[ColorID], [t0].[ColorNombre], [t0].[ImagenProducto], [t0].[PedidoID], [t0].[PrecioUnitario], [t0].[ProductoID], [t0].[Subtotal], [t0].[TallaID], [t0].[TallaNombre], [t0].[ProductoID0], [t0].[CategoriaPrincipalID], [t0].[Codigo], [t0].[Descripcion], [t0].[DescripcionCorta], [t0].[Estado], [t0].[FechaActualizacion], [t0].[FechaCreacion], [t0].[ImagenPrincipal], [t0].[MarcaID], [t0].[Nombre], [t0].[PrecioCompra], [t0].[PrecioOferta], [t0].[PrecioVenta], [t0].[Stock], [t0].[TipoProductoID], [t0].[TallaID0], [t0].[Nombre0], [t0].[Orden], [t0].[ColorID0], [t0].[CodigoHex], [t0].[Estado0], [t0].[Nombre1]
+FROM [Pedidos] AS [p]
+LEFT JOIN (
+    SELECT [p0].[PedidoDetalleID], [p0].[Cantidad], [p0].[ColorID], [p0].[ColorNombre], [p0].[ImagenProducto], [p0].[PedidoID], [p0].[PrecioUnitario], [p0].[ProductoID], [p0].[Subtotal], [p0].[TallaID], [p0].[TallaNombre], [p1].[ProductoID] AS [ProductoID0], [p1].[CategoriaPrincipalID], [p1].[Codigo], [p1].[Descripcion], [p1].[DescripcionCorta], [p1].[Estado], [p1].[FechaActualizacion], [p1].[FechaCreacion], [p1].[ImagenPrincipal], [p1].[MarcaID], [p1].[Nombre], [p1].[PrecioCompra], [p1].[PrecioOferta], [p1].[PrecioVenta], [p1].[Stock], [p1].[TipoProductoID], [t].[TallaID] AS [TallaID0], [t].[Nombre] AS [Nombre0], [t].[Orden], [c].[ColorID] AS [ColorID0], [c].[CodigoHex], [c].[Estado] AS [Estado0], [c].[Nombre] AS [Nombre1]
+    FROM [PedidoDetalles] AS [p0]
+    INNER JOIN [Productos] AS [p1] ON [p0].[ProductoID] = [p1].[ProductoID]
+    LEFT JOIN [Tallas] AS [t] ON [p0].[TallaID] = [t].[TallaID]
+    LEFT JOIN [Colores] AS [c] ON [p0].[ColorID] = [c].[ColorID]
+) AS [t0] ON [p].[PedidoID] = [t0].[PedidoID]
+ORDER BY [p].[FechaPedido] DESC, [p].[PedidoID], [t0].[PedidoDetalleID], [t0].[ProductoID0], [t0].[TallaID0]
+2026-04-15 10:50:22.364 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Pedidos.PedidoDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:50:22.386 -05:00 [INF] Executed action SelenneApi.Controllers.PedidosController.GetAll (SelenneApi) in 474.8602ms
+2026-04-15 10:50:22.389 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.PedidosController.GetAll (SelenneApi)'
+2026-04-15 10:50:22.391 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/pedidos - 200 null application/json; charset=utf-8 575.2623ms
+2026-04-15 10:50:23.427 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/productos - null null
+2026-04-15 10:50:23.432 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:23.434 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/productos - 204 null null 7.1657ms
+2026-04-15 10:50:23.440 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/productos - application/json null
+2026-04-15 10:50:23.444 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:23.446 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.ProductosController.GetAll (SelenneApi)'
+2026-04-15 10:50:23.456 -05:00 [INF] Route matched with {action = "GetAll", controller = "Productos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String, System.Nullable`1[System.Int32], System.String) on controller SelenneApi.Controllers.ProductosController (SelenneApi).
+2026-04-15 10:50:23.612 -05:00 [INF] Executed DbCommand (25ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[ProductoID], [p].[CategoriaPrincipalID], [p].[Codigo], [p].[Descripcion], [p].[DescripcionCorta], [p].[Estado], [p].[FechaActualizacion], [p].[FechaCreacion], [p].[ImagenPrincipal], [p].[MarcaID], [p].[Nombre], [p].[PrecioCompra], [p].[PrecioOferta], [p].[PrecioVenta], [p].[Stock], [p].[TipoProductoID], [c].[CategoriaPrincipalID], [c].[Descripcion], [c].[Estado], [c].[Imagen], [c].[Nombre], [m].[MarcaID], [m].[Estado], [m].[Nombre], [t].[TipoProductoID], [t].[Estado], [t].[Nombre]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.671 -05:00 [INF] Executed DbCommand (15ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p0].[ProductoImagenID], [p0].[ColorNombre], [p0].[Orden], [p0].[ProductoID], [p0].[URL], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [ProductoImagenes] AS [p0] ON [p].[ProductoID] = [p0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.700 -05:00 [INF] Executed DbCommand (14ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p0].[VarianteID], [p0].[ColorNombre], [p0].[ProductoID], [p0].[Stock], [p0].[TallaNombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [ProductoStockVariantes] AS [p0] ON [p].[ProductoID] = [p0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.731 -05:00 [INF] Executed DbCommand (17ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoTallaID], [t0].[ProductoID], [t0].[StockTalla], [t0].[TallaID], [t0].[TallaID0], [t0].[Nombre], [t0].[Orden], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoTallaID], [p0].[ProductoID], [p0].[StockTalla], [p0].[TallaID], [t1].[TallaID] AS [TallaID0], [t1].[Nombre], [t1].[Orden]
+    FROM [ProductoTallas] AS [p0]
+    INNER JOIN [Tallas] AS [t1] ON [p0].[TallaID] = [t1].[TallaID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.768 -05:00 [INF] Executed DbCommand (15ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoColorID], [t0].[ColorID], [t0].[ProductoID], [t0].[ColorID0], [t0].[CodigoHex], [t0].[Estado], [t0].[Nombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoColorID], [p0].[ColorID], [p0].[ProductoID], [c0].[ColorID] AS [ColorID0], [c0].[CodigoHex], [c0].[Estado], [c0].[Nombre]
+    FROM [ProductoColores] AS [p0]
+    INNER JOIN [Colores] AS [c0] ON [p0].[ColorID] = [c0].[ColorID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.798 -05:00 [INF] Executed DbCommand (15ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoMaterialID], [t0].[MaterialID], [t0].[Porcentaje], [t0].[ProductoID], [t0].[MaterialID0], [t0].[Estado], [t0].[Nombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoMaterialID], [p0].[MaterialID], [p0].[Porcentaje], [p0].[ProductoID], [m0].[MaterialID] AS [MaterialID0], [m0].[Estado], [m0].[Nombre]
+    FROM [ProductoMateriales] AS [p0]
+    INNER JOIN [Materiales] AS [m0] ON [p0].[MaterialID] = [m0].[MaterialID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.837 -05:00 [INF] Executed DbCommand (15ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [v].[ValoracionID], [v].[Comentario], [v].[Estado], [v].[FechaCreacion], [v].[NoUtil], [v].[PedidoID], [v].[ProductoID], [v].[Puntuacion], [v].[UsuarioID], [v].[Util], [v].[VerificadoCompra], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [Valoraciones] AS [v] ON [p].[ProductoID] = [v].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:50:23.850 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Productos.ProductoDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:50:23.869 -05:00 [INF] Executed action SelenneApi.Controllers.ProductosController.GetAll (SelenneApi) in 410.947ms
+2026-04-15 10:50:23.871 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.ProductosController.GetAll (SelenneApi)'
+2026-04-15 10:50:23.873 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/productos - 200 null application/json; charset=utf-8 432.8517ms
+2026-04-15 10:50:23.906 -05:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/uploads/5e9c7377-5842-42f7-a599-1277fa026908.png - null null
+2026-04-15 10:50:23.912 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:50:23.942 -05:00 [INF] Sending file. Request path: '/uploads/5e9c7377-5842-42f7-a599-1277fa026908.png'. Physical path: 'C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend\wwwroot\uploads\5e9c7377-5842-42f7-a599-1277fa026908.png'
+2026-04-15 10:50:23.944 -05:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/uploads/5e9c7377-5842-42f7-a599-1277fa026908.png - 200 91194 image/png 38.1547ms
+2026-04-15 10:51:41.285 -05:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/uploads/3a232e12-46f0-4c71-b3af-945d6e7dd325.jpg - null null
+2026-04-15 10:51:41.293 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:51:41.299 -05:00 [INF] Sending file. Request path: '/uploads/3a232e12-46f0-4c71-b3af-945d6e7dd325.jpg'. Physical path: 'C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend\wwwroot\uploads\3a232e12-46f0-4c71-b3af-945d6e7dd325.jpg'
+2026-04-15 10:51:41.312 -05:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/uploads/3a232e12-46f0-4c71-b3af-945d6e7dd325.jpg - 200 5509 image/jpeg 26.9773ms
+2026-04-15 10:51:41.965 -05:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/uploads/c4c28186-e1d1-4229-bbc1-ecdccb014750.jpg - null null
+2026-04-15 10:51:41.968 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:51:42.102 -05:00 [INF] Sending file. Request path: '/uploads/c4c28186-e1d1-4229-bbc1-ecdccb014750.jpg'. Physical path: 'C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend\wwwroot\uploads\c4c28186-e1d1-4229-bbc1-ecdccb014750.jpg'
+2026-04-15 10:51:42.105 -05:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/uploads/c4c28186-e1d1-4229-bbc1-ecdccb014750.jpg - 200 3293896 image/jpeg 140.2728ms
+2026-04-15 10:51:43.193 -05:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/uploads/53f86ab0-6da9-4448-ae80-286987afaf3f.jpg - null null
+2026-04-15 10:51:43.197 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:51:43.204 -05:00 [INF] Sending file. Request path: '/uploads/53f86ab0-6da9-4448-ae80-286987afaf3f.jpg'. Physical path: 'C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend\wwwroot\uploads\53f86ab0-6da9-4448-ae80-286987afaf3f.jpg'
+2026-04-15 10:51:43.206 -05:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/uploads/53f86ab0-6da9-4448-ae80-286987afaf3f.jpg - 200 6603 image/jpeg 12.8603ms
+2026-04-15 10:51:43.996 -05:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/uploads/fc0c80da-d877-41ab-b48f-fcf0612f4de6.jpg - null null
+2026-04-15 10:51:44.000 -05:00 [INF] CORS policy execution successful.
+2026-04-15 10:51:44.108 -05:00 [INF] Sending file. Request path: '/uploads/fc0c80da-d877-41ab-b48f-fcf0612f4de6.jpg'. Physical path: 'C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend\wwwroot\uploads\fc0c80da-d877-41ab-b48f-fcf0612f4de6.jpg'
+2026-04-15 10:51:44.110 -05:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/uploads/fc0c80da-d877-41ab-b48f-fcf0612f4de6.jpg - 200 3293896 image/jpeg 114.0694ms
+2026-04-15 10:55:56.483 -05:00 [INF] Request starting HTTP/1.1 POST http://10.0.2.2:5000/api/auth/login - application/json 54
+2026-04-15 10:55:56.560 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.AuthController.Login (SelenneApi)'
+2026-04-15 10:55:56.597 -05:00 [INF] Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(SelenneApi.Models.DTOs.Auth.LoginRequestDto) on controller SelenneApi.Controllers.AuthController (SelenneApi).
+2026-04-15 10:55:57.669 -05:00 [INF] Executed DbCommand (501ms) [Parameters=[@__dto_Email_0='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[UsuarioID], [u].[Ciudad], [u].[Direccion], [u].[Documento], [u].[Email], [u].[EmailVerificado], [u].[Estado], [u].[FechaRegistro], [u].[FechaUltimoLogin], [u].[NombreCompleto], [u].[NotificacionesEmail], [u].[PasswordHash], [u].[RoleID], [u].[Telefono], [r].[RoleID], [r].[Descripcion], [r].[Estado], [r].[Nombre]
+FROM [Usuarios] AS [u]
+LEFT JOIN [Roles] AS [r] ON [u].[RoleID] = [r].[RoleID]
+WHERE [u].[Email] = @__dto_Email_0
+2026-04-15 10:55:57.978 -05:00 [INF] Executed DbCommand (62ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (Size = 100), @p2='?' (Size = 50), @p3='?' (DbType = Boolean), @p4='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [LoginAttempts] ([AttemptAt], [Email], [IPAddress], [Successful], [UsuarioID])
+OUTPUT INSERTED.[AttemptID]
+VALUES (@p0, @p1, @p2, @p3, @p4);
+2026-04-15 10:55:58.098 -05:00 [INF] Executed DbCommand (108ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime2)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [Usuarios] SET [FechaUltimoLogin] = @p0
+WHERE [UsuarioID] = @p1;
+SELECT @@ROWCOUNT;
+2026-04-15 10:55:58.117 -05:00 [INF] Executed DbCommand (8ms) [Parameters=[@__usuarioId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[UsuarioID], [u].[Ciudad], [u].[Direccion], [u].[Documento], [u].[Email], [u].[EmailVerificado], [u].[Estado], [u].[FechaRegistro], [u].[FechaUltimoLogin], [u].[NombreCompleto], [u].[NotificacionesEmail], [u].[PasswordHash], [u].[RoleID], [u].[Telefono], [r].[RoleID], [r].[Descripcion], [r].[Estado], [r].[Nombre]
+FROM [Usuarios] AS [u]
+LEFT JOIN [Roles] AS [r] ON [u].[RoleID] = [r].[RoleID]
+WHERE [u].[UsuarioID] = @__usuarioId_0
+2026-04-15 10:55:58.146 -05:00 [INF] Executed DbCommand (11ms) [Parameters=[@__usuario_RoleID_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[Nombre]
+FROM [RolePermissions] AS [r]
+INNER JOIN [Permissions] AS [p] ON [r].[PermissionID] = [p].[PermissionID]
+WHERE [r].[RoleID] = @__usuario_RoleID_0
+2026-04-15 10:55:58.201 -05:00 [INF] Executed DbCommand (18ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (DbType = DateTime2), @p2='?' (Size = 50), @p3='?' (DbType = Boolean), @p4='?' (DbType = DateTime2), @p5='?' (Size = 500), @p6='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [RefreshTokens] ([CreatedAt], [ExpiresAt], [IPAddress], [Revoked], [RevokedAt], [Token], [UsuarioID])
+OUTPUT INSERTED.[RefreshTokenID]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+2026-04-15 10:55:58.232 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[SelenneApi.Models.DTOs.Auth.TokenResponseDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-15 10:55:58.252 -05:00 [INF] Executed action SelenneApi.Controllers.AuthController.Login (SelenneApi) in 1647.105ms
+2026-04-15 10:55:58.257 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.AuthController.Login (SelenneApi)'
+2026-04-15 10:55:58.264 -05:00 [INF] Request finished HTTP/1.1 POST http://10.0.2.2:5000/api/auth/login - 200 null application/json; charset=utf-8 1792.1812ms
+2026-04-15 10:56:01.037 -05:00 [INF] Request starting HTTP/1.1 GET http://10.0.2.2:5000/api/favoritos - application/json null
+2026-04-15 10:56:01.042 -05:00 [INF] Request starting HTTP/1.1 GET http://10.0.2.2:5000/api/notificaciones - application/json null
+2026-04-15 10:56:01.049 -05:00 [INF] Request starting HTTP/1.1 GET http://10.0.2.2:5000/api/pedidos - application/json null
+2026-04-15 10:56:01.078 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.PedidosController.GetAll (SelenneApi)'
+2026-04-15 10:56:01.080 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi)'
+2026-04-15 10:56:01.080 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi)'
+2026-04-15 10:56:01.081 -05:00 [INF] Route matched with {action = "GetAll", controller = "Pedidos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[SelenneApi.Models.DTOs.Pedidos.PedidoDto]]]] GetAll() on controller SelenneApi.Controllers.PedidosController (SelenneApi).
+2026-04-15 10:56:01.082 -05:00 [INF] Route matched with {action = "GetAll", controller = "Notificaciones"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[SelenneApi.Models.DTOs.Notificaciones.NotificacionDto]]]] GetAll() on controller SelenneApi.Controllers.NotificacionesController (SelenneApi).
+2026-04-15 10:56:01.084 -05:00 [INF] Route matched with {action = "GetFavoritos", controller = "Favoritos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[System.Int32]]]] GetFavoritos() on controller SelenneApi.Controllers.FavoritosController (SelenneApi).
+2026-04-15 10:56:01.109 -05:00 [INF] Executed DbCommand (8ms) [Parameters=[@__userId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [f].[ProductoID]
+FROM [Favoritos] AS [f]
+WHERE [f].[UsuarioID] = @__userId_0
+2026-04-15 10:56:01.113 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:56:01.117 -05:00 [INF] Executed action SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi) in 27.1343ms
+2026-04-15 10:56:01.120 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi)'
+2026-04-15 10:56:01.121 -05:00 [INF] Request finished HTTP/1.1 GET http://10.0.2.2:5000/api/favoritos - 200 null application/json; charset=utf-8 83.8134ms
+2026-04-15 10:56:01.167 -05:00 [INF] Executed DbCommand (50ms) [Parameters=[@__userId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [n].[NotificacionID], [n].[Titulo], [n].[Mensaje], [n].[Tipo], [n].[Leida], [n].[FechaCreacion], [n].[Referencia]
+FROM [Notificaciones] AS [n]
+WHERE [n].[UsuarioID] = @__userId_0
+ORDER BY [n].[FechaCreacion] DESC
+2026-04-15 10:56:01.174 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Notificaciones.NotificacionDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:56:01.182 -05:00 [INF] Executed action SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi) in 94.6206ms
+2026-04-15 10:56:01.185 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi)'
+2026-04-15 10:56:01.187 -05:00 [INF] Request finished HTTP/1.1 GET http://10.0.2.2:5000/api/notificaciones - 200 null application/json; charset=utf-8 145.4706ms
+2026-04-15 10:56:01.233 -05:00 [INF] Executed DbCommand (117ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[PedidoID], [p].[Banco], [p].[Ciudad], [p].[ClienteID], [p].[CodigoPostal], [p].[ComprobantePago], [p].[ConfirmacionToken], [p].[Descuento], [p].[DireccionEnvio], [p].[DocumentoCliente], [p].[EmailCliente], [p].[Envio], [p].[Estado], [p].[FechaActualizacion], [p].[FechaEntrega], [p].[FechaEnvio], [p].[FechaPedido], [p].[MetodoPago], [p].[NombreCliente], [p].[NombreTitular], [p].[Notas], [p].[NumeroCuenta], [p].[NumeroGuia], [p].[Subtotal], [p].[TelefonoCliente], [p].[TipoCuenta], [p].[Total], [p].[Transportadora], [t0].[PedidoDetalleID], [t0].[Cantidad], [t0].[ColorID], [t0].[ColorNombre], [t0].[ImagenProducto], [t0].[PedidoID], [t0].[PrecioUnitario], [t0].[ProductoID], [t0].[Subtotal], [t0].[TallaID], [t0].[TallaNombre], [t0].[ProductoID0], [t0].[CategoriaPrincipalID], [t0].[Codigo], [t0].[Descripcion], [t0].[DescripcionCorta], [t0].[Estado], [t0].[FechaActualizacion], [t0].[FechaCreacion], [t0].[ImagenPrincipal], [t0].[MarcaID], [t0].[Nombre], [t0].[PrecioCompra], [t0].[PrecioOferta], [t0].[PrecioVenta], [t0].[Stock], [t0].[TipoProductoID], [t0].[TallaID0], [t0].[Nombre0], [t0].[Orden], [t0].[ColorID0], [t0].[CodigoHex], [t0].[Estado0], [t0].[Nombre1]
+FROM [Pedidos] AS [p]
+LEFT JOIN (
+    SELECT [p0].[PedidoDetalleID], [p0].[Cantidad], [p0].[ColorID], [p0].[ColorNombre], [p0].[ImagenProducto], [p0].[PedidoID], [p0].[PrecioUnitario], [p0].[ProductoID], [p0].[Subtotal], [p0].[TallaID], [p0].[TallaNombre], [p1].[ProductoID] AS [ProductoID0], [p1].[CategoriaPrincipalID], [p1].[Codigo], [p1].[Descripcion], [p1].[DescripcionCorta], [p1].[Estado], [p1].[FechaActualizacion], [p1].[FechaCreacion], [p1].[ImagenPrincipal], [p1].[MarcaID], [p1].[Nombre], [p1].[PrecioCompra], [p1].[PrecioOferta], [p1].[PrecioVenta], [p1].[Stock], [p1].[TipoProductoID], [t].[TallaID] AS [TallaID0], [t].[Nombre] AS [Nombre0], [t].[Orden], [c].[ColorID] AS [ColorID0], [c].[CodigoHex], [c].[Estado] AS [Estado0], [c].[Nombre] AS [Nombre1]
+    FROM [PedidoDetalles] AS [p0]
+    INNER JOIN [Productos] AS [p1] ON [p0].[ProductoID] = [p1].[ProductoID]
+    LEFT JOIN [Tallas] AS [t] ON [p0].[TallaID] = [t].[TallaID]
+    LEFT JOIN [Colores] AS [c] ON [p0].[ColorID] = [c].[ColorID]
+) AS [t0] ON [p].[PedidoID] = [t0].[PedidoID]
+ORDER BY [p].[FechaPedido] DESC, [p].[PedidoID], [t0].[PedidoDetalleID], [t0].[ProductoID0], [t0].[TallaID0]
+2026-04-15 10:56:01.293 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Pedidos.PedidoDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:56:01.303 -05:00 [INF] Executed action SelenneApi.Controllers.PedidosController.GetAll (SelenneApi) in 218.2356ms
+2026-04-15 10:56:01.309 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.PedidosController.GetAll (SelenneApi)'
+2026-04-15 10:56:01.315 -05:00 [INF] Request finished HTTP/1.1 GET http://10.0.2.2:5000/api/pedidos - 200 null application/json; charset=utf-8 264.4866ms
+2026-04-15 10:56:01.346 -05:00 [INF] Request starting HTTP/1.1 GET http://10.0.2.2:5000/api/productos - application/json null
+2026-04-15 10:56:01.352 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.ProductosController.GetAll (SelenneApi)'
+2026-04-15 10:56:01.356 -05:00 [INF] Route matched with {action = "GetAll", controller = "Productos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String, System.Nullable`1[System.Int32], System.String) on controller SelenneApi.Controllers.ProductosController (SelenneApi).
+2026-04-15 10:56:01.449 -05:00 [INF] Executed DbCommand (32ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[ProductoID], [p].[CategoriaPrincipalID], [p].[Codigo], [p].[Descripcion], [p].[DescripcionCorta], [p].[Estado], [p].[FechaActualizacion], [p].[FechaCreacion], [p].[ImagenPrincipal], [p].[MarcaID], [p].[Nombre], [p].[PrecioCompra], [p].[PrecioOferta], [p].[PrecioVenta], [p].[Stock], [p].[TipoProductoID], [c].[CategoriaPrincipalID], [c].[Descripcion], [c].[Estado], [c].[Imagen], [c].[Nombre], [m].[MarcaID], [m].[Estado], [m].[Nombre], [t].[TipoProductoID], [t].[Estado], [t].[Nombre]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.485 -05:00 [INF] Executed DbCommand (21ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p0].[ProductoImagenID], [p0].[ColorNombre], [p0].[Orden], [p0].[ProductoID], [p0].[URL], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [ProductoImagenes] AS [p0] ON [p].[ProductoID] = [p0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.514 -05:00 [INF] Executed DbCommand (21ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p0].[VarianteID], [p0].[ColorNombre], [p0].[ProductoID], [p0].[Stock], [p0].[TallaNombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [ProductoStockVariantes] AS [p0] ON [p].[ProductoID] = [p0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.543 -05:00 [INF] Executed DbCommand (23ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoTallaID], [t0].[ProductoID], [t0].[StockTalla], [t0].[TallaID], [t0].[TallaID0], [t0].[Nombre], [t0].[Orden], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoTallaID], [p0].[ProductoID], [p0].[StockTalla], [p0].[TallaID], [t1].[TallaID] AS [TallaID0], [t1].[Nombre], [t1].[Orden]
+    FROM [ProductoTallas] AS [p0]
+    INNER JOIN [Tallas] AS [t1] ON [p0].[TallaID] = [t1].[TallaID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.567 -05:00 [INF] Executed DbCommand (17ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoColorID], [t0].[ColorID], [t0].[ProductoID], [t0].[ColorID0], [t0].[CodigoHex], [t0].[Estado], [t0].[Nombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoColorID], [p0].[ColorID], [p0].[ProductoID], [c0].[ColorID] AS [ColorID0], [c0].[CodigoHex], [c0].[Estado], [c0].[Nombre]
+    FROM [ProductoColores] AS [p0]
+    INNER JOIN [Colores] AS [c0] ON [p0].[ColorID] = [c0].[ColorID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.597 -05:00 [INF] Executed DbCommand (21ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoMaterialID], [t0].[MaterialID], [t0].[Porcentaje], [t0].[ProductoID], [t0].[MaterialID0], [t0].[Estado], [t0].[Nombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoMaterialID], [p0].[MaterialID], [p0].[Porcentaje], [p0].[ProductoID], [m0].[MaterialID] AS [MaterialID0], [m0].[Estado], [m0].[Nombre]
+    FROM [ProductoMateriales] AS [p0]
+    INNER JOIN [Materiales] AS [m0] ON [p0].[MaterialID] = [m0].[MaterialID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.625 -05:00 [INF] Executed DbCommand (23ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [v].[ValoracionID], [v].[Comentario], [v].[Estado], [v].[FechaCreacion], [v].[NoUtil], [v].[PedidoID], [v].[ProductoID], [v].[Puntuacion], [v].[UsuarioID], [v].[Util], [v].[VerificadoCompra], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [Valoraciones] AS [v] ON [p].[ProductoID] = [v].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 10:56:01.632 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Productos.ProductoDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 10:56:01.637 -05:00 [INF] Executed action SelenneApi.Controllers.ProductosController.GetAll (SelenneApi) in 270.6173ms
+2026-04-15 10:56:01.639 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.ProductosController.GetAll (SelenneApi)'
+2026-04-15 10:56:01.643 -05:00 [INF] Request finished HTTP/1.1 GET http://10.0.2.2:5000/api/productos - 200 null application/json; charset=utf-8 296.7661ms
+2026-04-15 10:57:09.043 -05:00 [INF] Application is shutting down...
+2026-04-15 16:44:24.761 -05:00 [INF] Executed DbCommand (151ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-04-15 16:44:24.898 -05:00 [INF] Database connection successful
+2026-04-15 16:44:26.326 -05:00 [INF] Executed DbCommand (907ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Permissions] AS [p]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 16:44:26.471 -05:00 [INF] Executed DbCommand (27ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[Nombre]
+FROM [Permissions] AS [p]
+2026-04-15 16:44:26.530 -05:00 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Roles] AS [r]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 16:44:26.578 -05:00 [INF] Executed DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [RolePermissions] AS [r]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END
+2026-04-15 16:44:26.588 -05:00 [INF] Seed data applied
+2026-04-15 16:44:26.599 -05:00 [INF] Selenne API starting on http://localhost:5000
+2026-04-15 16:44:26.602 -05:00 [INF] Swagger UI: http://localhost:5000/swagger
+2026-04-15 16:44:26.661 -05:00 [INF] User profile is available. Using 'C:\Users\Usuario\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-15 16:44:26.919 -05:00 [INF] Now listening on: http://localhost:5000
+2026-04-15 16:44:26.927 -05:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-15 16:44:26.933 -05:00 [INF] Hosting environment: Production
+2026-04-15 16:44:26.939 -05:00 [INF] Content root path: C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend
+2026-04-15 16:50:32.373 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/auth/login - null null
+2026-04-15 16:50:32.735 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:32.759 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/auth/login - 204 null null 412.7498ms
+2026-04-15 16:50:32.777 -05:00 [INF] Request starting HTTP/1.1 POST http://127.0.0.1:5000/api/auth/login - application/json 54
+2026-04-15 16:50:32.794 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:32.905 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.AuthController.Login (SelenneApi)'
+2026-04-15 16:50:33.028 -05:00 [INF] Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(SelenneApi.Models.DTOs.Auth.LoginRequestDto) on controller SelenneApi.Controllers.AuthController (SelenneApi).
+2026-04-15 16:50:35.300 -05:00 [INF] Executed DbCommand (274ms) [Parameters=[@__dto_Email_0='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[UsuarioID], [u].[Ciudad], [u].[Direccion], [u].[Documento], [u].[Email], [u].[EmailVerificado], [u].[Estado], [u].[FechaRegistro], [u].[FechaUltimoLogin], [u].[NombreCompleto], [u].[NotificacionesEmail], [u].[PasswordHash], [u].[RoleID], [u].[Telefono], [r].[RoleID], [r].[Descripcion], [r].[Estado], [r].[Nombre]
+FROM [Usuarios] AS [u]
+LEFT JOIN [Roles] AS [r] ON [u].[RoleID] = [r].[RoleID]
+WHERE [u].[Email] = @__dto_Email_0
+2026-04-15 16:50:36.417 -05:00 [INF] Executed DbCommand (62ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (Size = 100), @p2='?' (Size = 50), @p3='?' (DbType = Boolean), @p4='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [LoginAttempts] ([AttemptAt], [Email], [IPAddress], [Successful], [UsuarioID])
+OUTPUT INSERTED.[AttemptID]
+VALUES (@p0, @p1, @p2, @p3, @p4);
+2026-04-15 16:50:36.575 -05:00 [INF] Executed DbCommand (110ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (DbType = DateTime2)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+UPDATE [Usuarios] SET [FechaUltimoLogin] = @p0
+WHERE [UsuarioID] = @p1;
+SELECT @@ROWCOUNT;
+2026-04-15 16:50:36.615 -05:00 [INF] Executed DbCommand (8ms) [Parameters=[@__usuarioId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [u].[UsuarioID], [u].[Ciudad], [u].[Direccion], [u].[Documento], [u].[Email], [u].[EmailVerificado], [u].[Estado], [u].[FechaRegistro], [u].[FechaUltimoLogin], [u].[NombreCompleto], [u].[NotificacionesEmail], [u].[PasswordHash], [u].[RoleID], [u].[Telefono], [r].[RoleID], [r].[Descripcion], [r].[Estado], [r].[Nombre]
+FROM [Usuarios] AS [u]
+LEFT JOIN [Roles] AS [r] ON [u].[RoleID] = [r].[RoleID]
+WHERE [u].[UsuarioID] = @__usuarioId_0
+2026-04-15 16:50:36.662 -05:00 [INF] Executed DbCommand (12ms) [Parameters=[@__usuario_RoleID_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[Nombre]
+FROM [RolePermissions] AS [r]
+INNER JOIN [Permissions] AS [p] ON [r].[PermissionID] = [p].[PermissionID]
+WHERE [r].[RoleID] = @__usuario_RoleID_0
+2026-04-15 16:50:36.834 -05:00 [INF] Executed DbCommand (20ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (DbType = DateTime2), @p2='?' (Size = 50), @p3='?' (DbType = Boolean), @p4='?' (DbType = DateTime2), @p5='?' (Size = 500), @p6='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [RefreshTokens] ([CreatedAt], [ExpiresAt], [IPAddress], [Revoked], [RevokedAt], [Token], [UsuarioID])
+OUTPUT INSERTED.[RefreshTokenID]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+2026-04-15 16:50:36.874 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[SelenneApi.Models.DTOs.Auth.TokenResponseDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-15 16:50:36.916 -05:00 [INF] Executed action SelenneApi.Controllers.AuthController.Login (SelenneApi) in 3880.8065ms
+2026-04-15 16:50:36.918 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.AuthController.Login (SelenneApi)'
+2026-04-15 16:50:36.927 -05:00 [INF] Request finished HTTP/1.1 POST http://127.0.0.1:5000/api/auth/login - 200 null application/json; charset=utf-8 4149.7919ms
+2026-04-15 16:50:36.956 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/favoritos - null null
+2026-04-15 16:50:36.959 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/notificaciones - null null
+2026-04-15 16:50:36.959 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/pedidos - null null
+2026-04-15 16:50:36.973 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:36.980 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:36.980 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:36.982 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/favoritos - 204 null null 25.8182ms
+2026-04-15 16:50:36.989 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/notificaciones - 204 null null 30.0162ms
+2026-04-15 16:50:36.999 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/pedidos - 204 null null 39.7331ms
+2026-04-15 16:50:37.016 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/favoritos - application/json null
+2026-04-15 16:50:37.033 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/notificaciones - application/json null
+2026-04-15 16:50:37.041 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/pedidos - application/json null
+2026-04-15 16:50:37.076 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:37.077 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:37.078 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:37.179 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.PedidosController.GetAll (SelenneApi)'
+2026-04-15 16:50:37.183 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi)'
+2026-04-15 16:50:37.183 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi)'
+2026-04-15 16:50:37.189 -05:00 [INF] Route matched with {action = "GetAll", controller = "Pedidos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[SelenneApi.Models.DTOs.Pedidos.PedidoDto]]]] GetAll() on controller SelenneApi.Controllers.PedidosController (SelenneApi).
+2026-04-15 16:50:37.190 -05:00 [INF] Route matched with {action = "GetAll", controller = "Notificaciones"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[SelenneApi.Models.DTOs.Notificaciones.NotificacionDto]]]] GetAll() on controller SelenneApi.Controllers.NotificacionesController (SelenneApi).
+2026-04-15 16:50:37.190 -05:00 [INF] Route matched with {action = "GetFavoritos", controller = "Favoritos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[SelenneApi.Models.DTOs.ApiResponse`1[System.Collections.Generic.List`1[System.Int32]]]] GetFavoritos() on controller SelenneApi.Controllers.FavoritosController (SelenneApi).
+2026-04-15 16:50:37.340 -05:00 [INF] Executed DbCommand (18ms) [Parameters=[@__userId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [f].[ProductoID]
+FROM [Favoritos] AS [f]
+WHERE [f].[UsuarioID] = @__userId_0
+2026-04-15 16:50:37.377 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 16:50:37.388 -05:00 [INF] Executed action SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi) in 192.9235ms
+2026-04-15 16:50:37.393 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.FavoritosController.GetFavoritos (SelenneApi)'
+2026-04-15 16:50:37.396 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/favoritos - 200 null application/json; charset=utf-8 379.7428ms
+2026-04-15 16:50:37.440 -05:00 [INF] Executed DbCommand (51ms) [Parameters=[@__userId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [n].[NotificacionID], [n].[Titulo], [n].[Mensaje], [n].[Tipo], [n].[Leida], [n].[FechaCreacion], [n].[Referencia]
+FROM [Notificaciones] AS [n]
+WHERE [n].[UsuarioID] = @__userId_0
+ORDER BY [n].[FechaCreacion] DESC
+2026-04-15 16:50:37.447 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Notificaciones.NotificacionDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 16:50:37.462 -05:00 [INF] Executed action SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi) in 268.7728ms
+2026-04-15 16:50:37.464 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.NotificacionesController.GetAll (SelenneApi)'
+2026-04-15 16:50:37.466 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/notificaciones - 200 null application/json; charset=utf-8 433.3958ms
+2026-04-15 16:50:37.502 -05:00 [INF] Executed DbCommand (82ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[PedidoID], [p].[Banco], [p].[Ciudad], [p].[ClienteID], [p].[CodigoPostal], [p].[ComprobantePago], [p].[ConfirmacionToken], [p].[Descuento], [p].[DireccionEnvio], [p].[DocumentoCliente], [p].[EmailCliente], [p].[Envio], [p].[Estado], [p].[FechaActualizacion], [p].[FechaEntrega], [p].[FechaEnvio], [p].[FechaPedido], [p].[MetodoPago], [p].[NombreCliente], [p].[NombreTitular], [p].[Notas], [p].[NumeroCuenta], [p].[NumeroGuia], [p].[Subtotal], [p].[TelefonoCliente], [p].[TipoCuenta], [p].[Total], [p].[Transportadora], [t0].[PedidoDetalleID], [t0].[Cantidad], [t0].[ColorID], [t0].[ColorNombre], [t0].[ImagenProducto], [t0].[PedidoID], [t0].[PrecioUnitario], [t0].[ProductoID], [t0].[Subtotal], [t0].[TallaID], [t0].[TallaNombre], [t0].[ProductoID0], [t0].[CategoriaPrincipalID], [t0].[Codigo], [t0].[Descripcion], [t0].[DescripcionCorta], [t0].[Estado], [t0].[FechaActualizacion], [t0].[FechaCreacion], [t0].[ImagenPrincipal], [t0].[MarcaID], [t0].[Nombre], [t0].[PrecioCompra], [t0].[PrecioOferta], [t0].[PrecioVenta], [t0].[Stock], [t0].[TipoProductoID], [t0].[TallaID0], [t0].[Nombre0], [t0].[Orden], [t0].[ColorID0], [t0].[CodigoHex], [t0].[Estado0], [t0].[Nombre1]
+FROM [Pedidos] AS [p]
+LEFT JOIN (
+    SELECT [p0].[PedidoDetalleID], [p0].[Cantidad], [p0].[ColorID], [p0].[ColorNombre], [p0].[ImagenProducto], [p0].[PedidoID], [p0].[PrecioUnitario], [p0].[ProductoID], [p0].[Subtotal], [p0].[TallaID], [p0].[TallaNombre], [p1].[ProductoID] AS [ProductoID0], [p1].[CategoriaPrincipalID], [p1].[Codigo], [p1].[Descripcion], [p1].[DescripcionCorta], [p1].[Estado], [p1].[FechaActualizacion], [p1].[FechaCreacion], [p1].[ImagenPrincipal], [p1].[MarcaID], [p1].[Nombre], [p1].[PrecioCompra], [p1].[PrecioOferta], [p1].[PrecioVenta], [p1].[Stock], [p1].[TipoProductoID], [t].[TallaID] AS [TallaID0], [t].[Nombre] AS [Nombre0], [t].[Orden], [c].[ColorID] AS [ColorID0], [c].[CodigoHex], [c].[Estado] AS [Estado0], [c].[Nombre] AS [Nombre1]
+    FROM [PedidoDetalles] AS [p0]
+    INNER JOIN [Productos] AS [p1] ON [p0].[ProductoID] = [p1].[ProductoID]
+    LEFT JOIN [Tallas] AS [t] ON [p0].[TallaID] = [t].[TallaID]
+    LEFT JOIN [Colores] AS [c] ON [p0].[ColorID] = [c].[ColorID]
+) AS [t0] ON [p].[PedidoID] = [t0].[PedidoID]
+ORDER BY [p].[FechaPedido] DESC, [p].[PedidoID], [t0].[PedidoDetalleID], [t0].[ProductoID0], [t0].[TallaID0]
+2026-04-15 16:50:37.732 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Pedidos.PedidoDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 16:50:37.769 -05:00 [INF] Executed action SelenneApi.Controllers.PedidosController.GetAll (SelenneApi) in 577.8528ms
+2026-04-15 16:50:37.781 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.PedidosController.GetAll (SelenneApi)'
+2026-04-15 16:50:37.782 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/pedidos - 200 null application/json; charset=utf-8 741.1593ms
+2026-04-15 16:50:39.096 -05:00 [INF] Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/productos - null null
+2026-04-15 16:50:39.121 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:39.123 -05:00 [INF] Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5000/api/productos - 204 null null 26.6661ms
+2026-04-15 16:50:39.139 -05:00 [INF] Request starting HTTP/1.1 GET http://127.0.0.1:5000/api/productos - application/json null
+2026-04-15 16:50:39.151 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:39.155 -05:00 [INF] Executing endpoint 'SelenneApi.Controllers.ProductosController.GetAll (SelenneApi)'
+2026-04-15 16:50:39.178 -05:00 [INF] Route matched with {action = "GetAll", controller = "Productos"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAll(System.String, System.Nullable`1[System.Int32], System.String) on controller SelenneApi.Controllers.ProductosController (SelenneApi).
+2026-04-15 16:50:39.477 -05:00 [INF] Executed DbCommand (28ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p].[ProductoID], [p].[CategoriaPrincipalID], [p].[Codigo], [p].[Descripcion], [p].[DescripcionCorta], [p].[Estado], [p].[FechaActualizacion], [p].[FechaCreacion], [p].[ImagenPrincipal], [p].[MarcaID], [p].[Nombre], [p].[PrecioCompra], [p].[PrecioOferta], [p].[PrecioVenta], [p].[Stock], [p].[TipoProductoID], [c].[CategoriaPrincipalID], [c].[Descripcion], [c].[Estado], [c].[Imagen], [c].[Nombre], [m].[MarcaID], [m].[Estado], [m].[Nombre], [t].[TipoProductoID], [t].[Estado], [t].[Nombre]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.548 -05:00 [INF] Executed DbCommand (16ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p0].[ProductoImagenID], [p0].[ColorNombre], [p0].[Orden], [p0].[ProductoID], [p0].[URL], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [ProductoImagenes] AS [p0] ON [p].[ProductoID] = [p0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.587 -05:00 [INF] Executed DbCommand (15ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [p0].[VarianteID], [p0].[ColorNombre], [p0].[ProductoID], [p0].[Stock], [p0].[TallaNombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [ProductoStockVariantes] AS [p0] ON [p].[ProductoID] = [p0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.633 -05:00 [INF] Executed DbCommand (28ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoTallaID], [t0].[ProductoID], [t0].[StockTalla], [t0].[TallaID], [t0].[TallaID0], [t0].[Nombre], [t0].[Orden], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoTallaID], [p0].[ProductoID], [p0].[StockTalla], [p0].[TallaID], [t1].[TallaID] AS [TallaID0], [t1].[Nombre], [t1].[Orden]
+    FROM [ProductoTallas] AS [p0]
+    INNER JOIN [Tallas] AS [t1] ON [p0].[TallaID] = [t1].[TallaID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.794 -05:00 [INF] Executed DbCommand (17ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoColorID], [t0].[ColorID], [t0].[ProductoID], [t0].[ColorID0], [t0].[CodigoHex], [t0].[Estado], [t0].[Nombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoColorID], [p0].[ColorID], [p0].[ProductoID], [c0].[ColorID] AS [ColorID0], [c0].[CodigoHex], [c0].[Estado], [c0].[Nombre]
+    FROM [ProductoColores] AS [p0]
+    INNER JOIN [Colores] AS [c0] ON [p0].[ColorID] = [c0].[ColorID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.858 -05:00 [INF] Executed DbCommand (33ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [t0].[ProductoMaterialID], [t0].[MaterialID], [t0].[Porcentaje], [t0].[ProductoID], [t0].[MaterialID0], [t0].[Estado], [t0].[Nombre], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN (
+    SELECT [p0].[ProductoMaterialID], [p0].[MaterialID], [p0].[Porcentaje], [p0].[ProductoID], [m0].[MaterialID] AS [MaterialID0], [m0].[Estado], [m0].[Nombre]
+    FROM [ProductoMateriales] AS [p0]
+    INNER JOIN [Materiales] AS [m0] ON [p0].[MaterialID] = [m0].[MaterialID]
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.933 -05:00 [INF] Executed DbCommand (26ms) [Parameters=[@__p_0='?' (Size = 20)], CommandType='"Text"', CommandTimeout='30']
+SELECT [v].[ValoracionID], [v].[Comentario], [v].[Estado], [v].[FechaCreacion], [v].[NoUtil], [v].[PedidoID], [v].[ProductoID], [v].[Puntuacion], [v].[UsuarioID], [v].[Util], [v].[VerificadoCompra], [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+FROM [Productos] AS [p]
+INNER JOIN [CategoriasPrincipales] AS [c] ON [p].[CategoriaPrincipalID] = [c].[CategoriaPrincipalID]
+INNER JOIN [Marcas] AS [m] ON [p].[MarcaID] = [m].[MarcaID]
+INNER JOIN [TiposProducto] AS [t] ON [p].[TipoProductoID] = [t].[TipoProductoID]
+INNER JOIN [Valoraciones] AS [v] ON [p].[ProductoID] = [v].[ProductoID]
+WHERE [p].[Estado] = @__p_0
+ORDER BY [p].[ProductoID], [c].[CategoriaPrincipalID], [m].[MarcaID], [t].[TipoProductoID]
+2026-04-15 16:50:39.955 -05:00 [INF] Executing OkObjectResult, writing value of type 'SelenneApi.Models.DTOs.ApiResponse`1[[System.Collections.Generic.List`1[[SelenneApi.Models.DTOs.Productos.ProductoDto, SelenneApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-04-15 16:50:39.996 -05:00 [INF] Executed action SelenneApi.Controllers.ProductosController.GetAll (SelenneApi) in 802.0206ms
+2026-04-15 16:50:39.998 -05:00 [INF] Executed endpoint 'SelenneApi.Controllers.ProductosController.GetAll (SelenneApi)'
+2026-04-15 16:50:40.002 -05:00 [INF] Request finished HTTP/1.1 GET http://127.0.0.1:5000/api/productos - 200 null application/json; charset=utf-8 861.7971ms
+2026-04-15 16:50:40.050 -05:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/uploads/5e9c7377-5842-42f7-a599-1277fa026908.png - null null
+2026-04-15 16:50:40.060 -05:00 [INF] CORS policy execution successful.
+2026-04-15 16:50:40.115 -05:00 [INF] Sending file. Request path: '/uploads/5e9c7377-5842-42f7-a599-1277fa026908.png'. Physical path: 'C:\Users\Usuario\Downloads\SelenneApi\Selenne-Boutique-Backend\wwwroot\uploads\5e9c7377-5842-42f7-a599-1277fa026908.png'
+2026-04-15 16:50:40.122 -05:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/uploads/5e9c7377-5842-42f7-a599-1277fa026908.png - 200 91194 image/png 71.8861ms
+2026-04-15 16:51:31.841 -05:00 [INF] Application is shutting down...

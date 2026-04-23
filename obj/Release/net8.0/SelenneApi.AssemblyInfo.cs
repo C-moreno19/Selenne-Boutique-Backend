@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SelenneApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb1191303765a6e6623315d635c2387d3eb496ce")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+26f5f22ef984d35fc36f18f0713cbf9bcfec59f7")]
 [assembly: System.Reflection.AssemblyProductAttribute("SelenneApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SelenneApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

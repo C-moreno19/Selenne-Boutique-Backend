@@ -25,7 +25,7 @@ public class ProductosController : ControllerBase
             .Include(p => p.Imagenes).Include(p => p.StockVariantes).Include(p => p.ProductoTallas).ThenInclude(pt => pt.Talla)
             .Include(p => p.ProductoColores).ThenInclude(pc => pc.Color)
             .Include(p => p.ProductoMateriales).ThenInclude(pm => pm.Material)
-            .Include(p => p.Valoraciones).AsQueryable();
+            .Include(p => p.Valoraciones).AsSplitQuery().AsQueryable();
         query = query.Where(p => p.Estado == (estado ?? "activo"));
         if (categoriaId.HasValue) query = query.Where(p => p.CategoriaPrincipalID == categoriaId);
         if (!string.IsNullOrEmpty(buscar)) query = query.Where(p => p.Nombre.Contains(buscar) || p.Codigo.Contains(buscar));
@@ -40,7 +40,7 @@ public class ProductosController : ControllerBase
             .Include(x => x.Imagenes).Include(x => x.StockVariantes).Include(x => x.ProductoTallas).ThenInclude(pt => pt.Talla)
             .Include(x => x.ProductoColores).ThenInclude(pc => pc.Color)
             .Include(x => x.ProductoMateriales).ThenInclude(pm => pm.Material)
-            .Include(x => x.Valoraciones)
+            .Include(x => x.Valoraciones).AsSplitQuery()
             .FirstOrDefaultAsync(x => x.ProductoID == id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("Producto no encontrado"));
         return Ok(ApiResponse<ProductoDto>.Ok(MapDto(p)));
