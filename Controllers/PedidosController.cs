@@ -103,6 +103,7 @@ public class PedidosController : ControllerBase
             Subtotal = subtotal,
             Total = subtotal,
             Notas = dto.Notas,
+            ComprobantePago = dto.ComprobantePago,
             FechaPedido = DateTime.Now,
             FechaActualizacion = DateTime.Now,
             ConfirmacionToken = Guid.NewGuid().ToString("N")
