@@ -104,6 +104,7 @@ public class PedidosController : ControllerBase
             Total = subtotal,
             Notas = dto.Notas,
             ComprobantePago = dto.ComprobantePago,
+            Estado = dto.Estado ?? "Pendiente",
             FechaPedido = DateTime.Now,
             FechaActualizacion = DateTime.Now,
             ConfirmacionToken = Guid.NewGuid().ToString("N")
