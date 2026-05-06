@@ -12,6 +12,9 @@ public class SmtpEmailService : IEmailService
     public SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> logger)
     { _config = config; _logger = logger; }
 
+    // Genera un código de referencia que no expone el volumen de ventas al cliente
+    private static string Ref(int pedidoId) => $"SLN-{pedidoId + 10000}";
+
     private async Task SendAsync(string to, string subject, string body)
     {
         try
@@ -67,8 +70,8 @@ public class SmtpEmailService : IEmailService
         await SendAsync(to, "Tu cuenta en Selenne", Wrap("Cuenta creada", "<p>Hola " + nombre + ", tu contrasena temporal es: <b>" + tempPassword + "</b>. Cambiala al ingresar.</p>"));
 
     public async Task SendOrderConfirmationClienteAsync(string to, string nombre, int pedidoId, decimal total) =>
-        await SendAsync(to, "Pedido #" + pedidoId + " confirmado", Wrap("Pedido confirmado",
-            "<p>Hola " + nombre + ", tu pedido #" + pedidoId + " fue recibido exitosamente.</p>" +
+        await SendAsync(to, "Pedido " + Ref(pedidoId) + " confirmado", Wrap("Pedido confirmado",
+            "<p>Hola " + nombre + ", tu pedido <strong>" + Ref(pedidoId) + "</strong> fue recibido exitosamente.</p>" +
             "<p>Total: <b>$" + total.ToString("N2") + "</b></p>"));
 
     public async Task SendOrderConfirmationAdminAsync(string adminEmail, string clienteNombre, int pedidoId, decimal total) =>
@@ -77,15 +80,15 @@ public class SmtpEmailService : IEmailService
             "<p>Total: <b>$" + total.ToString("N2") + "</b></p>"));
 
     public async Task SendOrderStatusUpdateAsync(string to, string nombre, int pedidoId, string nuevoEstado) =>
-        await SendAsync(to, "Pedido #" + pedidoId + ": " + nuevoEstado, Wrap("Estado actualizado",
-            "<p>Hola " + nombre + ", tu pedido #" + pedidoId + " ahora esta en estado: <b>" + nuevoEstado + "</b></p>"));
+        await SendAsync(to, "Pedido " + Ref(pedidoId) + ": " + nuevoEstado, Wrap("Estado actualizado",
+            "<p>Hola " + nombre + ", tu pedido <strong>" + Ref(pedidoId) + "</strong> ahora esta en estado: <b>" + nuevoEstado + "</b></p>"));
 
     public async Task SendPendingPaymentEmailAsync(string to, string nombre, int pedidoId, decimal total, string mensaje, string banco, string cuenta, string titular, string tipoCuenta)
     {
         var whatsapp = _config["BankAccount:WhatsApp"] ?? "";
         var accountInfo = $"Banco: {banco} | Cuenta: {cuenta} | Titular: {titular}";
         var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?data={Uri.EscapeDataString(accountInfo)}&size=200x200&bgcolor=ffffff";
-        var waText = Uri.EscapeDataString($"Hola, adjunto el comprobante de pago del pedido #{pedidoId} por ${total:N0}");
+        var waText = Uri.EscapeDataString($"Hola, adjunto el comprobante de pago del pedido {Ref(pedidoId)} por ${total:N0}");
         var waUrl = $"https://wa.me/{whatsapp}?text={waText}";
 
         var waSection = string.IsNullOrEmpty(whatsapp) ? "" :
@@ -96,7 +99,7 @@ public class SmtpEmailService : IEmailService
             "<a href='" + waUrl + "' style='display:inline-block;background:#25d366;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold'>" +
             "💬 Abrir WhatsApp" +
             "</a>" +
-            "<p style='margin:12px 0 0 0;font-size:11px;color:#9ca3af'>Indica en el mensaje el número de tu pedido: <strong>#" + pedidoId + "</strong></p>" +
+            "<p style='margin:12px 0 0 0;font-size:11px;color:#9ca3af'>Indica en el mensaje tu número de referencia: <strong>" + Ref(pedidoId) + "</strong></p>" +
             "</div>";
 
         var body =
@@ -104,7 +107,7 @@ public class SmtpEmailService : IEmailService
             "<div style='background:linear-gradient(135deg,#d65391,#f8a9c5);padding:30px;text-align:center;border-radius:12px 12px 0 0'>" +
             "<h1 style='color:white;margin:0;font-size:28px'>Selenne Boutique</h1></div>" +
             "<div style='background:white;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px'>" +
-            "<h2 style='color:#d65391'>💳 Información de Pago — Pedido #" + pedidoId + "</h2>" +
+            "<h2 style='color:#d65391'>💳 Información de Pago — Pedido " + Ref(pedidoId) + "</h2>" +
             "<p>Hola <strong>" + nombre + "</strong>,</p>" +
             (string.IsNullOrWhiteSpace(mensaje) ? "" : "<p style='background:#fef9c3;border-left:4px solid #eab308;padding:12px 16px;border-radius:6px'>" + mensaje + "</p>") +
             "<p>Para completar tu pedido por <strong>$" + total.ToString("N0") + "</strong>, realiza la transferencia a la siguiente cuenta:</p>" +
@@ -122,7 +125,7 @@ public class SmtpEmailService : IEmailService
             "<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'>" +
             "<p style='font-size:12px;color:#9ca3af;text-align:center'>Selenne Boutique — Moda con estilo</p>" +
             "</div></body></html>";
-        await SendAsync(to, "Pedido #" + pedidoId + " — Información de pago", body);
+        await SendAsync(to, "Pedido " + Ref(pedidoId) + " — Información de pago", body);
     }
 
     public async Task SendShippingNotificationEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, string? fotoUrl)
@@ -134,7 +137,7 @@ public class SmtpEmailService : IEmailService
             "<div style='background:white;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px'>" +
             "<h2 style='color:#16a34a'>🚚 ¡Tu pedido está en camino!</h2>" +
             "<p>Hola <strong>" + nombre + "</strong>,</p>" +
-            "<p>Tu pedido <strong>#" + pedidoId + "</strong> ha sido despachado y está en camino a tu dirección.</p>" +
+            "<p>Tu pedido <strong>" + Ref(pedidoId) + "</strong> ha sido despachado y está en camino a tu dirección.</p>" +
             (string.IsNullOrEmpty(numeroGuia) ? "" :
                 "<div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0'>" +
                 "<p style='margin:0 0 6px 0;color:#6b7280;font-size:13px;font-weight:bold'>NÚMERO DE GUÍA</p>" +
@@ -150,18 +153,18 @@ public class SmtpEmailService : IEmailService
             "<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'>" +
             "<p style='font-size:12px;color:#9ca3af;text-align:center'>Selenne Boutique — Moda con estilo</p>" +
             "</div></body></html>";
-        await SendAsync(to, "🚚 Tu pedido #" + pedidoId + " fue despachado - Selenne Boutique", body);
+        await SendAsync(to, "🚚 Tu pedido " + Ref(pedidoId) + " fue despachado - Selenne Boutique", body);
     }
 
     public async Task SendOrderApprovedAsync(string to, string nombre, int pedidoId, decimal total, string confirmarUrl) =>
-        await SendAsync(to, "✅ Tu pedido #" + pedidoId + " fue aprobado - Selenne Boutique",
+        await SendAsync(to, "✅ Tu pedido " + Ref(pedidoId) + " fue aprobado - Selenne Boutique",
             "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>" +
             "<div style='background:linear-gradient(135deg,#d65391,#f8a9c5);padding:30px;text-align:center;border-radius:12px 12px 0 0'>" +
             "<h1 style='color:white;margin:0;font-size:28px'>Selenne Boutique</h1></div>" +
             "<div style='background:white;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px'>" +
             "<h2 style='color:#16a34a'>✅ ¡Tu pedido fue aprobado!</h2>" +
             "<p>Hola <strong>" + nombre + "</strong>,</p>" +
-            "<p>Tu pedido <strong>#" + pedidoId + "</strong> ha sido aprobado y será enviado en las próximas <strong>72 horas</strong>.</p>" +
+            "<p>Tu pedido <strong>" + Ref(pedidoId) + "</strong> ha sido aprobado y será enviado en las próximas <strong>72 horas</strong>.</p>" +
             "<p style='color:#6b7280'>Total: <strong>$" + total.ToString("N0") + "</strong></p>" +
             "<p>Cuando recibas tu pedido, confirma la entrega haciendo clic en el siguiente botón:</p>" +
             "<div style='text-align:center;margin:36px 0'>" +
