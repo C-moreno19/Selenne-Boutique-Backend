@@ -478,6 +478,16 @@ public class ProveedoresController : ControllerBase
         return Ok(ApiResponse<object>.Ok(item));
     }
 
+    [HttpPut("{id}/estado")]
+    public async Task<IActionResult> UpdateEstado(int id, [FromBody] ProveedorEstadoDto dto)
+    {
+        var item = await _db.Proveedores.FindAsync(id);
+        if (item == null) return NotFound(ApiResponse<object>.Fail("Proveedor no encontrado"));
+        item.Estado = dto.Estado;
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { proveedorID = item.ProveedorID, estado = item.Estado }));
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -487,6 +497,11 @@ public class ProveedoresController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok("Proveedor eliminado"));
     }
+}
+
+public class ProveedorEstadoDto
+{
+    public string Estado { get; set; } = string.Empty;
 }
 
 public class ProveedorDto
