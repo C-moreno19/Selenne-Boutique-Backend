@@ -65,6 +65,20 @@ public class PedidosController : ControllerBase
         int userId = 0;
         try { userId = User.GetUserId(); } catch { }
 
+        // Si no hay token válido, intentar resolver el cliente por email
+        int clienteId = userId;
+        if (clienteId == 0 && !string.IsNullOrEmpty(dto.EmailCliente))
+        {
+            var usuarioPorEmail = await _db.Usuarios
+                .Where(u => u.Email.ToLower() == dto.EmailCliente.ToLower())
+                .Select(u => new { u.UsuarioID })
+                .FirstOrDefaultAsync();
+            clienteId = usuarioPorEmail?.UsuarioID ?? 0;
+        }
+
+        if (clienteId == 0)
+            return BadRequest(ApiResponse<object>.Fail("Debes iniciar sesión para realizar un pedido"));
+
         // Usar items del DTO directamente
         if (dto.Items == null || !dto.Items.Any())
             return BadRequest(ApiResponse<object>.Fail("Debes incluir al menos un producto"));
@@ -87,7 +101,7 @@ public class PedidosController : ControllerBase
 
         var pedido = new Pedido
         {
-            ClienteID = userId > 0 ? userId : 1,
+            ClienteID = clienteId,
             NombreCliente = dto.NombreCliente,
             EmailCliente = dto.EmailCliente,
             TelefonoCliente = dto.TelefonoCliente,
@@ -146,12 +160,20 @@ public class PedidosController : ControllerBase
         }
 
         // Notificar al cliente que el pedido fue recibido
-        if (userId > 0)
-            _ = _notif.CreateAsync(userId, "📦 Pedido recibido",
+        if (clienteId > 0)
+            _ = _notif.CreateAsync(clienteId, "📦 Pedido recibido",
                 $"Hemos recibido tu pedido #{pedido.PedidoID} por ${pedido.Total:N0}. Está pendiente de revisión.", "info", $"pedido-{pedido.PedidoID}");
 
+        var numeroPedidoCliente = await _db.Pedidos
+            .Where(p => p.ClienteID == clienteId)
+            .CountAsync();
+
         return CreatedAtAction(nameof(GetById), new { id = pedido.PedidoID },
-            ApiResponse<object>.Ok(new { pedidoId = pedido.PedidoID, total = pedido.Total }, "Pedido creado"));
+            ApiResponse<object>.Ok(new {
+                pedidoId = pedido.PedidoID,
+                numeroPedidoCliente,
+                total = pedido.Total
+            }, "Pedido creado"));
     }
 
     [HttpPut("{id}/estado")]

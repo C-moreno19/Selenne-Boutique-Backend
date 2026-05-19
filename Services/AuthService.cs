@@ -74,9 +74,6 @@ public class AuthService : IAuthService
 
         var response = await BuildTokenResponse(usuario, ip);
 
-        if (usuario.Rol?.Nombre != "Cliente")
-            _ = Task.Run(() => _notif.CreateAsync(usuario.UsuarioID, "Inicio de sesion", "Nuevo inicio de sesion detectado.", "info"));
-
         return response;
     }
 
@@ -147,7 +144,10 @@ public class AuthService : IAuthService
             AccessToken = access, RefreshToken = refresh,
             Usuario = new UsuarioTokenDto {
                 UsuarioID = usuario.UsuarioID, NombreCompleto = usuario.NombreCompleto,
-                Email = usuario.Email, Rol = usuario.Rol?.Nombre, Permisos = permisos
+                Email = usuario.Email, Telefono = usuario.Telefono,
+                Direccion = usuario.Direccion, Ciudad = usuario.Ciudad,
+                Documento = usuario.Documento,
+                Rol = usuario.Rol?.Nombre, Permisos = permisos
             }
         });
     }
