@@ -146,6 +146,18 @@ using (var scope = app.Services.CreateScope())
         if (canConnect)
         {
             Log.Information("Database connection successful");
+            // Eliminar constraint restrictivo de MetodoPago si existe (fue añadido manualmente)
+            await db.Database.ExecuteSqlRawAsync(@"
+                IF EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                    WHERE CONSTRAINT_NAME = 'CK_Pedidos_MetodoPago'
+                    AND TABLE_NAME = 'Pedidos'
+                )
+                ALTER TABLE Pedidos DROP CONSTRAINT CK_Pedidos_MetodoPago;
+            ");
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM Notificaciones WHERE Titulo = 'Inicio de sesion';
+            ");
             await SeedData.SeedAsync(db);
             Log.Information("Seed data applied");
         }
