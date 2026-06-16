@@ -17,4 +17,7 @@ public class SignupRequestDto
 
     [MaxLength(20)]
     public string? Telefono { get; set; }
+
+    [MaxLength(20)]
+    public string? Documento { get; set; }
 }
