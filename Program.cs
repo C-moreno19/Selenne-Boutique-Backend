@@ -56,15 +56,17 @@ builder.Services.AddAuthorization();
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? new[] { "http://localhost:5173", "http://localhost:3000" };
 
+var isProduction = builder.Environment.IsProduction();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy.SetIsOriginAllowed(origin =>
         {
             var uri = new Uri(origin);
-            // Permite cualquier puerto de localhost (para desarrollo web/móvil)
-            if (uri.Host == "localhost" || uri.Host == "127.0.0.1") return true;
-            // Permite los orígenes configurados en appsettings
+            // En desarrollo permite cualquier puerto de localhost
+            if (!isProduction && (uri.Host == "localhost" || uri.Host == "127.0.0.1")) return true;
+            // En producción solo los orígenes configurados en appsettings.Production.json
             return allowedOrigins.Contains(origin);
         })
         .AllowAnyHeader()

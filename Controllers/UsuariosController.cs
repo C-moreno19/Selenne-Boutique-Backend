@@ -39,12 +39,13 @@ public class UsuariosController : ControllerBase
             NombreCompleto = u.NombreCompleto,
             Email = u.Email,
             Telefono = u.Telefono,
+            Direccion = u.Direccion,
+            Ciudad = u.Ciudad,
             RoleID = u.RoleID,
             RolNombre = u.Rol != null ? u.Rol.Nombre : null,
             Estado = u.Estado,
             EmailVerificado = u.EmailVerificado,
             FechaRegistro = u.FechaRegistro,
-            Ciudad = u.Ciudad
         }).ToListAsync();
         return Ok(ApiResponse<List<UsuarioDto>>.Ok(list));
     }
