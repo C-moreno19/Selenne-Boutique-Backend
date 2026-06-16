@@ -59,11 +59,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // IMPORTANTE: Indica a EF que Usuarios tiene trigger
-        // Sin esto EF falla con INSERT/UPDATE por el OUTPUT clause
-        modelBuilder.Entity<Usuario>()
-            .ToTable(tb => tb.HasTrigger("trg_Usuarios_Auditar"));
-
         // Unique constraints
         modelBuilder.Entity<RolePermission>()
             .HasIndex(rp => new { rp.RoleID, rp.PermissionID }).IsUnique();

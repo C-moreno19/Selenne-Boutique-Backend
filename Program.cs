@@ -19,7 +19,7 @@ builder.Host.UseSerilog();
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -124,21 +124,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Verify DB connection on startup
+// Run EF migrations and verify DB on startup
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var canConnect = await db.Database.CanConnectAsync();
-        if (canConnect)
-            Log.Information("Database connection successful");
-        else
-            Log.Warning("Cannot connect to database - check connection string");
+        await db.Database.MigrateAsync();
+        Log.Information("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Log.Warning("DB check failed: {Message}. Ensure DATABASE.sql has been executed in SQL Server.", ex.Message);
+        Log.Error("Database migration failed: {Message}", ex.Message);
     }
 }
 
