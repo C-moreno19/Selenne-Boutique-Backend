@@ -37,7 +37,8 @@ public class AuthService : IAuthService
         var usuario = new Usuario {
             NombreCompleto = dto.NombreCompleto, Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena),
-            Telefono = dto.Telefono, RoleID = clienteRole?.RoleID, Estado = "activo"
+            Telefono = dto.Telefono, Documento = dto.Documento,
+            RoleID = clienteRole?.RoleID, Estado = "activo"
         };
         _db.Usuarios.Add(usuario);
         await _db.SaveChangesAsync();

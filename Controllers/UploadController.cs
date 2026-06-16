@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelenneApi.Models.DTOs;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace SelenneApi.Controllers;
 
@@ -37,15 +40,19 @@ public class UploadController : ControllerBase
         if (!Directory.Exists(uploadsFolder))
             Directory.CreateDirectory(uploadsFolder);
 
-        // Nombre único para el archivo
-        var extension = Path.GetExtension(file.FileName).ToLower();
-        var fileName = $"{Guid.NewGuid()}{extension}";
+        // Guardar como WebP optimizado
+        var fileName = $"{Guid.NewGuid()}.webp";
         var filePath = Path.Combine(uploadsFolder, fileName);
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
+        using var inputStream = file.OpenReadStream();
+        using var image = await Image.LoadAsync(inputStream);
+
+        // Redimensionar si supera 1200px de ancho manteniendo proporción
+        if (image.Width > 1200)
+            image.Mutate(x => x.Resize(1200, 0));
+
+        var encoder = new WebpEncoder { Quality = 82 };
+        await image.SaveAsync(filePath, encoder);
 
         // URL pública del archivo
         var request = HttpContext.Request;

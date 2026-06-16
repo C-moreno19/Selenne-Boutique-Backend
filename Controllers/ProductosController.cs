@@ -100,11 +100,46 @@ public class ProductosController : ControllerBase
     {
         var uid = User.GetUserId();
         if (!await _perms.HasPermissionAsync(uid, "productos:eliminar")) return Forbid();
+
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-        _db.Productos.Remove(p);
-        await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
+
+        // Bloquear si tiene historial de negocio (pedidos, ventas, compras)
+        var bloqueos = new List<string>();
+
+        if (await _db.PedidoDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("pedidos de clientes");
+
+        if (await _db.VentaDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("ventas registradas");
+
+        if (await _db.CompraDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("órdenes de compra");
+
+        if (bloqueos.Count > 0)
+        {
+            var lista = string.Join(", ", bloqueos);
+            return BadRequest(ApiResponse<object>.Fail(
+                $"No se puede eliminar el producto porque tiene historial en: {lista}. " +
+                "Desactívelo en lugar de eliminarlo."));
+        }
+
+        try
+        {
+            // Eliminar registros secundarios que no son historial de negocio
+            var carritoItems = _db.Carrito.Where(c => c.ProductoID == id);
+            _db.Carrito.RemoveRange(carritoItems);
+
+            _db.Productos.Remove(p);
+            await _db.SaveChangesAsync();
+            return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
+        }
+        catch (DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            return BadRequest(ApiResponse<object>.Fail(
+                $"No se puede eliminar el producto porque tiene registros asociados en la base de datos. Detalle: {inner}"));
+        }
     }
 
 
