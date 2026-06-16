@@ -41,7 +41,7 @@ services:
 
   frontend:
     build:
-      context: ../Selenne-Boutique-Frontend/selenne-fixed
+      context: ../../Selenne_Boutique/selenne-fixed
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: "${BACKEND_URL}"

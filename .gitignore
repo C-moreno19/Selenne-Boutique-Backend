@@ -6,3 +6,4 @@ logs/
 wwwroot/uploads/
 appsettings.Development.json
 appsettings.Production.json
+.env
