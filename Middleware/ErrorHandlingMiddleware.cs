@@ -21,12 +21,14 @@ public class ErrorHandlingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
         _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+        var env = context.RequestServices.GetRequiredService<IWebHostEnvironment>();
         var (status, message) = ex switch
         {
             UnauthorizedException => (HttpStatusCode.Unauthorized, ex.Message),
             ForbiddenException => (HttpStatusCode.Forbidden, ex.Message),
             AppException appEx => ((HttpStatusCode)appEx.StatusCode, appEx.Message),
-            _ => (HttpStatusCode.InternalServerError, "Error interno del servidor")
+            _ => (HttpStatusCode.InternalServerError,
+                  env.IsDevelopment() ? $"{ex.GetType().Name}: {ex.Message}" : "Error interno del servidor")
         };
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)status;

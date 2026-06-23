@@ -19,7 +19,7 @@ public class Carrito
     [MaxLength(50)]
     public string? ColorSeleccionado { get; set; }
 
-    public DateTime FechaAgregado { get; set; } = DateTime.Now;
+    public DateTime FechaAgregado { get; set; } = DateTime.UtcNow;
 
     [ForeignKey("UsuarioID")]
     public Usuario Usuario { get; set; } = null!;

@@ -90,7 +90,7 @@ public class ProductosController : ControllerBase
         if (dto.Stock.HasValue) p.Stock = dto.Stock.Value;
         if (dto.Estado != null) p.Estado = dto.Estado;
         if (dto.ImagenPrincipal != null) p.ImagenPrincipal = dto.ImagenPrincipal;
-        p.FechaActualizacion = DateTime.Now;
+        p.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(null, "Actualizado"));
     }
@@ -102,7 +102,22 @@ public class ProductosController : ControllerBase
         if (!await _perms.HasPermissionAsync(uid, "productos:eliminar")) return Forbid();
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
+
+        // Limpiar todas las referencias antes de borrar
+        _db.ProductoImagenes.RemoveRange(await _db.ProductoImagenes.Where(x => x.ProductoID == id).ToListAsync());
+        _db.ProductoTallas.RemoveRange(await _db.ProductoTallas.Where(x => x.ProductoID == id).ToListAsync());
+        _db.ProductoColores.RemoveRange(await _db.ProductoColores.Where(x => x.ProductoID == id).ToListAsync());
+        _db.ProductoMateriales.RemoveRange(await _db.ProductoMateriales.Where(x => x.ProductoID == id).ToListAsync());
+        _db.ProductoStockVariantes.RemoveRange(await _db.ProductoStockVariantes.Where(x => x.ProductoID == id).ToListAsync());
+        _db.Carrito.RemoveRange(await _db.Carrito.Where(x => x.ProductoID == id).ToListAsync());
+        _db.Favoritos.RemoveRange(await _db.Favoritos.Where(x => x.ProductoID == id).ToListAsync());
+        _db.Valoraciones.RemoveRange(await _db.Valoraciones.Where(x => x.ProductoID == id).ToListAsync());
+        _db.PedidoDetalles.RemoveRange(await _db.PedidoDetalles.Where(x => x.ProductoID == id).ToListAsync());
+        _db.CompraDetalles.RemoveRange(await _db.CompraDetalles.Where(x => x.ProductoID == id).ToListAsync());
+        _db.StockMovimientos.RemoveRange(await _db.StockMovimientos.Where(x => x.ProductoID == id).ToListAsync());
+
         _db.Productos.Remove(p);
+
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
     }
@@ -161,7 +176,7 @@ public class ProductosController : ControllerBase
     }
 
     // POST /api/productos/{id}/variantes — Stock por talla+color
-    [HttpPost("{id}/variantes")]
+    [HttpPost("{id}/variantes"), Authorize]
     public async Task<IActionResult> SetVariantes(int id, [FromBody] SetVariantesDto dto)
     {
         var p = await _db.Productos
@@ -221,7 +236,7 @@ public class ProductosController : ControllerBase
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
         p.PrecioOferta = Math.Round(p.PrecioVenta * (1 - dto.PorcentajeDescuento / 100), 2);
-        p.FechaActualizacion = DateTime.Now;
+        p.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { p.PrecioOferta }, "Descuento aplicado"));
     }

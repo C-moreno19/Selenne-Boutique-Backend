@@ -19,7 +19,7 @@ public class AuditoriaPerfil
 
     public string? ValorAnterior { get; set; }
     public string? ValorNuevo { get; set; }
-    public DateTime FechaCambio { get; set; } = DateTime.Now;
+    public DateTime FechaCambio { get; set; } = DateTime.UtcNow;
 
     [MaxLength(50)]
     public string? Origen { get; set; }

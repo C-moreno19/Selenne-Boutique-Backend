@@ -14,7 +14,7 @@ public class LoginAttempt
     [MaxLength(100)]
     public string? Email { get; set; }
 
-    public DateTime AttemptAt { get; set; } = DateTime.Now;
+    public DateTime AttemptAt { get; set; } = DateTime.UtcNow;
     public bool Successful { get; set; } = false;
 
     [MaxLength(50)]

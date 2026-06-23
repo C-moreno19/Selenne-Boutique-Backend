@@ -44,7 +44,7 @@ public class AuthService : IAuthService
 
         var vToken = Guid.NewGuid().ToString("N");
         _db.EmailVerifications.Add(new EmailVerification {
-            UsuarioID = usuario.UsuarioID, Token = vToken, ExpiresAt = DateTime.Now.AddHours(24)
+            UsuarioID = usuario.UsuarioID, Token = vToken, ExpiresAt = DateTime.UtcNow.AddHours(24)
         });
         await _db.SaveChangesAsync();
 
@@ -69,7 +69,7 @@ public class AuthService : IAuthService
         if (!ok) return ApiResponse<TokenResponseDto>.Fail("Credenciales invalidas");
         if (usuario!.Estado != "activo") return ApiResponse<TokenResponseDto>.Fail("Cuenta bloqueada o inactiva");
 
-        usuario.FechaUltimoLogin = DateTime.Now;
+        usuario.FechaUltimoLogin = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         var response = await BuildTokenResponse(usuario, ip);
@@ -82,7 +82,7 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<string>> RefreshTokenAsync(string refreshToken)
     {
         var token = await _db.RefreshTokens.Include(rt => rt.Usuario).ThenInclude(u => u.Rol)
-            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.Revoked && rt.ExpiresAt > DateTime.Now);
+            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.Revoked && rt.ExpiresAt > DateTime.UtcNow);
         if (token == null) return ApiResponse<string>.Fail("Refresh token invalido o expirado");
         var permisos = await _perms.GetUserPermissionsAsync(token.UsuarioID);
         return ApiResponse<string>.Ok(_jwt.GenerateAccessToken(token.Usuario, permisos));
@@ -91,16 +91,16 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<bool>> LogoutAsync(string refreshToken)
     {
         var token = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
-        if (token != null) { token.Revoked = true; token.RevokedAt = DateTime.Now; await _db.SaveChangesAsync(); }
+        if (token != null) { token.Revoked = true; token.RevokedAt = DateTime.UtcNow; await _db.SaveChangesAsync(); }
         return ApiResponse<bool>.Ok(true, "Sesion cerrada");
     }
 
     public async Task<ApiResponse<bool>> VerifyEmailAsync(string token)
     {
         var ver = await _db.EmailVerifications.Include(ev => ev.Usuario)
-            .FirstOrDefaultAsync(ev => ev.Token == token && !ev.Verified && ev.ExpiresAt > DateTime.Now);
+            .FirstOrDefaultAsync(ev => ev.Token == token && !ev.Verified && ev.ExpiresAt > DateTime.UtcNow);
         if (ver == null) return ApiResponse<bool>.Fail("Token invalido o expirado");
-        ver.Verified = true; ver.VerifiedAt = DateTime.Now; ver.Usuario.EmailVerificado = true;
+        ver.Verified = true; ver.VerifiedAt = DateTime.UtcNow; ver.Usuario.EmailVerificado = true;
         await _db.SaveChangesAsync();
         _ = Task.Run(() => _notif.CreateAsync(ver.UsuarioID, "Email verificado", "Email verificado exitosamente.", "success"));
         return ApiResponse<bool>.Ok(true, "Email verificado");
@@ -111,7 +111,7 @@ public class AuthService : IAuthService
         var u = await _db.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
         if (u != null) {
             var tok = Guid.NewGuid().ToString("N");
-            _db.PasswordResetTokens.Add(new PasswordResetToken { UsuarioID = u.UsuarioID, Token = tok, ExpiresAt = DateTime.Now.AddHours(1) });
+            _db.PasswordResetTokens.Add(new PasswordResetToken { UsuarioID = u.UsuarioID, Token = tok, ExpiresAt = DateTime.UtcNow.AddHours(1) });
             await _db.SaveChangesAsync();
             _ = Task.Run(() => _email.SendPasswordResetEmailAsync(email, u.NombreCompleto, tok));
         }
@@ -121,10 +121,10 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<bool>> ResetPasswordAsync(string token, string newPassword)
     {
         var reset = await _db.PasswordResetTokens.Include(rt => rt.Usuario)
-            .FirstOrDefaultAsync(rt => rt.Token == token && !rt.Used && rt.ExpiresAt > DateTime.Now);
+            .FirstOrDefaultAsync(rt => rt.Token == token && !rt.Used && rt.ExpiresAt > DateTime.UtcNow);
         if (reset == null) return ApiResponse<bool>.Fail("Token invalido o expirado");
         reset.Usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        reset.Used = true; reset.UsedAt = DateTime.Now;
+        reset.Used = true; reset.UsedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         _ = Task.Run(() => _email.SendPasswordChangedEmailAsync(reset.Usuario.Email, reset.Usuario.NombreCompleto));
         return ApiResponse<bool>.Ok(true, "Contrasena actualizada");
@@ -139,7 +139,7 @@ public class AuthService : IAuthService
         var refresh = _jwt.GenerateRefreshToken();
         _db.RefreshTokens.Add(new RefreshToken {
             UsuarioID = usuario.UsuarioID, Token = refresh,
-            ExpiresAt = DateTime.Now.AddDays(7), IPAddress = ip
+            ExpiresAt = DateTime.UtcNow.AddDays(7), IPAddress = ip
         });
         await _db.SaveChangesAsync();
         return ApiResponse<TokenResponseDto>.Ok(new TokenResponseDto {

@@ -18,12 +18,18 @@ public class AdminController : ControllerBase
     [HttpGet("dashboard")]
     public async Task<ActionResult<ApiResponse<object>>> Dashboard()
     {
-        var totalUsuarios = await _db.Usuarios.CountAsync();
-        var totalProductos = await _db.Productos.CountAsync();
-        var totalPedidos = await _db.Pedidos.CountAsync();
+        if (!PermissionHelper.HasPermission(User, "config:ver") &&
+            !PermissionHelper.HasPermission(User, "ventas:ver") &&
+            !PermissionHelper.HasPermission(User, "productos:ver"))
+            return Forbid();
+        var totalUsuarios = await _db.Usuarios.CountAsync(u => u.Estado != "eliminado");
+        var totalProductos = await _db.Productos.CountAsync(p => p.Estado == "activo");
+        var estadosHistorial = new[] { "Completado", "Completada", "Cancelado", "Rechazado", "Rechazada" };
+        var totalPedidos = await _db.Pedidos.CountAsync(p => estadosHistorial.Contains(p.Estado));
         var pedidosPendientes = await _db.Pedidos.CountAsync(p => p.Estado == "Pendiente");
+        var estadosVenta = new[] { "Aprobado", "Aprobada", "En proceso", "Enviado", "Enviada", "Entregado", "Entregada", "Completado", "Completada" };
         var totalVentas = await _db.Pedidos
-            .Where(p => p.Estado == "Completada" || p.Estado == "Entregado")
+            .Where(p => estadosVenta.Contains(p.Estado))
             .SumAsync(p => (decimal?)p.Total) ?? 0;
 
         var productosStockBajo = await _db.Productos
