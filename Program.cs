@@ -19,7 +19,7 @@ builder.Host.UseSerilog();
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -55,7 +55,15 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins(allowedOrigins)
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                // Permitir cualquier puerto en localhost (web dev, Flutter web, etc.)
+                if (uri.Host == "localhost" || uri.Host == "127.0.0.1") return true;
+                // Orígenes explícitos de producción
+                return allowedOrigins.Contains(origin);
+            })
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -124,18 +132,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Run EF migrations and verify DB on startup
+// Verify DB connection on startup
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
-        Log.Information("Database migrations applied successfully");
+        var canConnect = await db.Database.CanConnectAsync();
+        if (canConnect)
+            Log.Information("Database connection successful");
+        else
+            Log.Warning("Cannot connect to database - check connection string");
     }
     catch (Exception ex)
     {
-        Log.Error("Database migration failed: {Message}", ex.Message);
+        Log.Warning("DB check failed: {Message}", ex.Message);
     }
 }
 

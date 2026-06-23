@@ -79,4 +79,30 @@ public class SmtpEmailService : IEmailService
     public async Task SendOrderStatusUpdateAsync(string to, string nombre, int pedidoId, string nuevoEstado) =>
         await SendAsync(to, "Pedido #" + pedidoId + ": " + nuevoEstado, Wrap("Estado actualizado",
             "<p>Hola " + nombre + ", tu pedido #" + pedidoId + " ahora esta en estado: <b>" + nuevoEstado + "</b></p>"));
+
+    public async Task SendPaymentInfoEmailAsync(string to, string nombre, int pedidoId, decimal total, string banco, string numeroCuenta, string titular, string tipoCuenta, string? mensajeAdicional)
+    {
+        var body = "<p>Hola <b>" + nombre + "</b>, para completar tu pedido <b>#" + pedidoId + "</b> por un total de <b>$" + total.ToString("N2") + "</b>, realiza la transferencia a los siguientes datos:</p>" +
+            "<table style='border-collapse:collapse;margin:16px 0'>" +
+            "<tr><td style='padding:6px 12px;font-weight:bold'>Banco</td><td style='padding:6px 12px'>" + banco + "</td></tr>" +
+            "<tr style='background:#fef6fa'><td style='padding:6px 12px;font-weight:bold'>Número de cuenta</td><td style='padding:6px 12px'>" + numeroCuenta + "</td></tr>" +
+            "<tr><td style='padding:6px 12px;font-weight:bold'>Titular</td><td style='padding:6px 12px'>" + titular + "</td></tr>" +
+            "<tr style='background:#fef6fa'><td style='padding:6px 12px;font-weight:bold'>Tipo de cuenta</td><td style='padding:6px 12px'>" + tipoCuenta + "</td></tr>" +
+            "</table>" +
+            (string.IsNullOrEmpty(mensajeAdicional) ? "" : "<p><b>Mensaje:</b> " + mensajeAdicional + "</p>") +
+            "<p>Una vez realizado el pago, envía el comprobante por WhatsApp o adjúntalo en la plataforma.</p>";
+        await SendAsync(to, "Información de pago - Pedido #" + pedidoId, Wrap("Datos bancarios para tu pedido", body));
+    }
+
+    public async Task SendShippingEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, string? fotoUrl)
+    {
+        var body = "<p>Hola <b>" + nombre + "</b>, tu pedido <b>#" + pedidoId + "</b> ha sido enviado.</p>" +
+            "<table style='border-collapse:collapse;margin:16px 0'>" +
+            (string.IsNullOrEmpty(transportadora) ? "" : "<tr><td style='padding:6px 12px;font-weight:bold'>Transportadora</td><td style='padding:6px 12px'>" + transportadora + "</td></tr>") +
+            (string.IsNullOrEmpty(numeroGuia) ? "" : "<tr style='background:#fef6fa'><td style='padding:6px 12px;font-weight:bold'>Número de guía</td><td style='padding:6px 12px'><b>" + numeroGuia + "</b></td></tr>") +
+            "</table>" +
+            (string.IsNullOrEmpty(fotoUrl) ? "" : "<p><img src='" + fotoUrl + "' alt='Foto del paquete' style='max-width:400px;border-radius:8px;margin-top:8px'/></p>") +
+            "<p>Puedes rastrear tu pedido con el número de guía en el sitio web de la transportadora.</p>";
+        await SendAsync(to, "Tu pedido #" + pedidoId + " ha sido enviado", Wrap("¡Tu pedido está en camino!", body));
+    }
 }

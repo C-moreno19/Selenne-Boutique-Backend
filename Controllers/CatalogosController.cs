@@ -425,7 +425,7 @@ public class ProveedoresController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var items = await _db.Proveedores.OrderBy(p => p.Nombre).ToListAsync();
+        var items = await _db.Proveedores.Where(p => p.Estado == "activo").OrderBy(p => p.Nombre).ToListAsync();
         return Ok(ApiResponse<object>.Ok(items));
     }
 
@@ -510,6 +510,13 @@ public class ComprasController : ControllerBase
             .Include(c => c.Proveedor)
             .Include(c => c.Detalles)
             .OrderByDescending(c => c.Fecha)
+            .Select(c => new {
+                c.CompraID, c.OrdenFactura, c.Fecha, c.Total, c.Estado, c.Notas,
+                proveedor = new { c.Proveedor.ProveedorID, c.Proveedor.Nombre, c.Proveedor.Documento },
+                detalles = c.Detalles.Select(d => new {
+                    d.CompraDetalleID, d.ProductoID, d.Cantidad, d.PrecioUnitario, d.Total
+                })
+            })
             .ToListAsync();
         return Ok(ApiResponse<object>.Ok(items));
     }
@@ -520,7 +527,16 @@ public class ComprasController : ControllerBase
         var item = await _db.Compras
             .Include(c => c.Proveedor)
             .Include(c => c.Detalles).ThenInclude(d => d.Producto)
-            .FirstOrDefaultAsync(c => c.CompraID == id);
+            .Where(c => c.CompraID == id)
+            .Select(c => new {
+                c.CompraID, c.OrdenFactura, c.Fecha, c.Total, c.Estado, c.Notas,
+                proveedor = new { c.Proveedor.ProveedorID, c.Proveedor.Nombre, c.Proveedor.Documento },
+                detalles = c.Detalles.Select(d => new {
+                    d.CompraDetalleID, d.ProductoID, d.Cantidad, d.PrecioUnitario, d.Total,
+                    productoNombre = d.Producto.Nombre
+                })
+            })
+            .FirstOrDefaultAsync();
         if (item == null) return NotFound(ApiResponse<object>.Fail("Compra no encontrada"));
         return Ok(ApiResponse<object>.Ok(item));
     }
@@ -535,14 +551,33 @@ public class ComprasController : ControllerBase
         {
             ProveedorID = dto.ProveedorID,
             OrdenFactura = dto.OrdenFactura,
-            Fecha = dto.Fecha ?? DateTime.Now,
+            Fecha = dto.Fecha ?? DateTime.UtcNow,
             Total = dto.Total,
-            Estado = "Activa",
+            Estado = "Pendiente",
             Notas = dto.Notas
         };
         _db.Compras.Add(compra);
         await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(compra));
+
+        foreach (var d in dto.Detalles)
+        {
+            var detalle = new CompraDetalle
+            {
+                CompraID = compra.CompraID,
+                ProductoID = d.ProductoID,
+                Cantidad = d.Cantidad,
+                PrecioUnitario = d.PrecioUnitario,
+                Total = d.Total
+            };
+            _db.CompraDetalles.Add(detalle);
+
+            var prod = await _db.Productos.FindAsync(d.ProductoID);
+            if (prod != null) prod.Stock += d.Cantidad;
+        }
+
+        if (dto.Detalles.Any()) await _db.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new { compraID = compra.CompraID }, "Compra registrada"));
     }
 
     [HttpPut("{id}/estado")]
@@ -573,6 +608,15 @@ public class CompraDto
     public DateTime? Fecha { get; set; }
     public decimal Total { get; set; }
     public string? Notas { get; set; }
+    public List<CompraDetalleDto> Detalles { get; set; } = new();
+}
+
+public class CompraDetalleDto
+{
+    public int ProductoID { get; set; }
+    public int Cantidad { get; set; }
+    public decimal PrecioUnitario { get; set; }
+    public decimal Total { get; set; }
 }
 
 // ─────────────────────────────────────────────
@@ -626,7 +670,7 @@ public class VentasController : ControllerBase
             Envio = dto.Envio,
             Total = dto.Total,
             Estado = "Pendiente",
-            FechaVenta = DateTime.Now
+            FechaVenta = DateTime.UtcNow
         };
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync();

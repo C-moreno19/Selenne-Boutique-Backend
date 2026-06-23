@@ -28,12 +28,14 @@ public class UsuariosController : ControllerBase
     {
         var uid = User.GetUserId();
         if (!await _perms.HasPermissionAsync(uid, "usuarios:ver")) return Forbid();
-        var list = await _db.Usuarios.Include(u => u.Rol).Select(u => new UsuarioDto {
-            UsuarioID = u.UsuarioID, NombreCompleto = u.NombreCompleto, Email = u.Email,
-            Telefono = u.Telefono, RoleID = u.RoleID, RolNombre = u.Rol != null ? u.Rol.Nombre : null,
-            Estado = u.Estado, EmailVerificado = u.EmailVerificado, FechaRegistro = u.FechaRegistro,
-            Ciudad = u.Ciudad
-        }).ToListAsync();
+        var list = await _db.Usuarios.Include(u => u.Rol)
+            .Where(u => u.Estado != "eliminado")
+            .Select(u => new UsuarioDto {
+                UsuarioID = u.UsuarioID, NombreCompleto = u.NombreCompleto, Email = u.Email,
+                Telefono = u.Telefono, RoleID = u.RoleID, RolNombre = u.Rol != null ? u.Rol.Nombre : null,
+                Estado = u.Estado, EmailVerificado = u.EmailVerificado, FechaRegistro = u.FechaRegistro,
+                Ciudad = u.Ciudad
+            }).ToListAsync();
         return Ok(ApiResponse<List<UsuarioDto>>.Ok(list));
     }
 
@@ -92,10 +94,10 @@ public class UsuariosController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var uid = User.GetUserId();
-        if (!await _perms.HasPermissionAsync(uid, "usuarios:eliminar")) return Forbid();
+        if (!PermissionHelper.HasPermission(User, "usuarios:eliminar")) return Forbid();
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-        u.Estado = "inactivo";
+        u.Estado = "eliminado";
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(null, "Usuario eliminado"));
     }
@@ -107,7 +109,7 @@ public class UsuariosController : ControllerBase
         if (!await _perms.HasPermissionAsync(uid, "usuarios:bloquear")) return Forbid();
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-        u.Estado = u.Estado == "activo" ? "inactivo" : "activo";
+        u.Estado = (u.Estado == "activo" || u.Estado == "eliminado") ? "inactivo" : "activo";
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { u.Estado }));
     }

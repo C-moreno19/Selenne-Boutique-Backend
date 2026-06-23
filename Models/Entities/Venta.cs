@@ -11,7 +11,7 @@ public class Venta
 
     public int? UsuarioID { get; set; }
     public int? ClienteID { get; set; }
-    public DateTime FechaVenta { get; set; } = DateTime.Now;
+    public DateTime FechaVenta { get; set; } = DateTime.UtcNow;
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal Subtotal { get; set; }

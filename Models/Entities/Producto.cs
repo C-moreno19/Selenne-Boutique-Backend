@@ -40,8 +40,8 @@ public class Producto
     [MaxLength(20)]
     public string Estado { get; set; } = "activo";
 
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
-    public DateTime FechaActualizacion { get; set; } = DateTime.Now;
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 
     [ForeignKey("CategoriaPrincipalID")]
     public CategoriaPrincipal Categoria { get; set; } = null!;

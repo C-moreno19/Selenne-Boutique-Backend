@@ -19,7 +19,7 @@ public class StockMovimiento
     public string? ReferenciaTipo { get; set; }
 
     public int? ReferenciaID { get; set; }
-    public DateTime Fecha { get; set; } = DateTime.Now;
+    public DateTime Fecha { get; set; } = DateTime.UtcNow;
     public int? UsuarioID { get; set; }
 
     [ForeignKey("ProductoID")]
