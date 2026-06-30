@@ -37,7 +37,7 @@ public class UsuariosController : ControllerBase
             .Where(u => u.Estado != "eliminado")
             .Select(u => new UsuarioDto {
                 UsuarioID = u.UsuarioID, NombreCompleto = u.NombreCompleto, Email = u.Email,
-                Telefono = u.Telefono, Direccion = u.Direccion, Ciudad = u.Ciudad,
+                Telefono = u.Telefono, Documento = u.Documento, Direccion = u.Direccion, Ciudad = u.Ciudad,
                 RoleID = u.RoleID, RolNombre = u.Rol != null ? u.Rol.Nombre : null,
                 Estado = u.Estado, EmailVerificado = u.EmailVerificado, FechaRegistro = u.FechaRegistro,
             }).ToListAsync();
