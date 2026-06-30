@@ -126,21 +126,4 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { }, "Contraseña actualizada exitosamente"));
     }
 
-    [HttpGet("permisos")]
-    [Authorize]
-    public async Task<IActionResult> GetPermisos()
-    {
-        var uid = User.GetUserId();
-        var usuario = await _db.Usuarios
-            .FirstOrDefaultAsync(u => u.UsuarioID == uid);
-
-        if (usuario == null) return NotFound(ApiResponse<object>.Fail("Usuario no encontrado"));
-
-        var permisos = await _db.RolePermissions
-            .Where(rp => rp.RoleID == usuario.RoleID)
-            .Join(_db.Permissions, rp => rp.PermissionID, p => p.PermissionID, (rp, p) => p.Nombre)
-            .ToListAsync();
-
-        return Ok(ApiResponse<List<string>>.Ok(permisos));
-    }
 }
