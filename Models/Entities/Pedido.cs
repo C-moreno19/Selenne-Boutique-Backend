@@ -10,7 +10,7 @@ public class Pedido
     public int PedidoID { get; set; }
 
     public int ClienteID { get; set; }
-    public DateTime FechaPedido { get; set; } = DateTime.Now;
+    public DateTime FechaPedido { get; set; } = DateTime.UtcNow;
 
     [Required, MaxLength(100)]
     public string NombreCliente { get; set; } = string.Empty;
@@ -74,7 +74,7 @@ public class Pedido
     public string? Notas { get; set; }
     public string? ComprobantePago { get; set; }
     public string? ConfirmacionToken { get; set; }
-    public DateTime FechaActualizacion { get; set; } = DateTime.Now;
+    public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 
     [ForeignKey("ClienteID")]
     public Usuario Cliente { get; set; } = null!;

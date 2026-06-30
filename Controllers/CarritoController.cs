@@ -68,7 +68,7 @@ public class CarritoController : ControllerBase
                 Cantidad = dto.Cantidad,
                 TallaSeleccionada = dto.TallaSeleccionada,
                 ColorSeleccionado = dto.ColorSeleccionado,
-                FechaAgregado = DateTime.Now
+                FechaAgregado = DateTime.UtcNow
             };
             _db.Carrito.Add(item);
             await _db.SaveChangesAsync();

@@ -20,8 +20,8 @@ public class ReportesController : ControllerBase
         [FromQuery] DateTime? desde = null, [FromQuery] DateTime? hasta = null)
     {
         if (!PermissionHelper.HasPermission(User, "reportes:ventas")) return Forbid();
-        var d = desde ?? DateTime.Now.AddMonths(-1);
-        var h = hasta ?? DateTime.Now;
+        var d = desde ?? DateTime.UtcNow.AddMonths(-1);
+        var h = hasta ?? DateTime.UtcNow;
         var pedidos = await _db.Pedidos.Where(p => p.FechaPedido >= d && p.FechaPedido <= h).ToListAsync();
         return Ok(ApiResponse<object>.Ok(new
         {
@@ -61,7 +61,7 @@ public class ReportesController : ControllerBase
     public async Task<ActionResult<ApiResponse<object>>> ReporteFinanciero([FromQuery] int anio = 0)
     {
         if (!PermissionHelper.HasPermission(User, "reportes:financiero")) return Forbid();
-        if (anio == 0) anio = DateTime.Now.Year;
+        if (anio == 0) anio = DateTime.UtcNow.Year;
         var pedidos = await _db.Pedidos
             .Where(p => p.FechaPedido.Year == anio && (p.Estado == "Completada" || p.Estado == "Entregado"))
             .ToListAsync();

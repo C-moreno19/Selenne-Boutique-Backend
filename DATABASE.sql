@@ -52,7 +52,7 @@ CREATE TABLE Usuarios (
     FechaUltimoLogin DATETIME,
     Ciudad NVARCHAR(100),
     NotificacionesEmail BIT NOT NULL DEFAULT 1,
-    CONSTRAINT CK_Usuarios_Estado CHECK (Estado IN ('activo','inactivo')),
+    CONSTRAINT CK_Usuarios_Estado CHECK (Estado IN ('activo','inactivo','eliminado')),
     CONSTRAINT FK_Usuarios_Roles FOREIGN KEY (RoleID) REFERENCES Roles(RoleID) ON DELETE SET NULL
 );
 -- Si la tabla ya existe, ejecutar:
@@ -278,6 +278,7 @@ CREATE TABLE Pedidos (
     FechaEnvio DATETIME,
     FechaEntrega DATETIME,
     Notas NVARCHAR(MAX),
+    ComprobantePago NVARCHAR(500),
     FechaActualizacion DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_Pedidos_Clientes FOREIGN KEY (ClienteID) REFERENCES Usuarios(UsuarioID)
 );

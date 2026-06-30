@@ -33,20 +33,14 @@ public class UsuariosController : ControllerBase
     {
         var uid = User.GetUserId();
         if (!await _perms.HasPermissionAsync(uid, "usuarios:ver")) return Forbid();
-        var list = await _db.Usuarios.Include(u => u.Rol).Select(u => new UsuarioDto
-        {
-            UsuarioID = u.UsuarioID,
-            NombreCompleto = u.NombreCompleto,
-            Email = u.Email,
-            Telefono = u.Telefono,
-            Direccion = u.Direccion,
-            Ciudad = u.Ciudad,
-            RoleID = u.RoleID,
-            RolNombre = u.Rol != null ? u.Rol.Nombre : null,
-            Estado = u.Estado,
-            EmailVerificado = u.EmailVerificado,
-            FechaRegistro = u.FechaRegistro,
-        }).ToListAsync();
+        var list = await _db.Usuarios.Include(u => u.Rol)
+            .Where(u => u.Estado != "eliminado")
+            .Select(u => new UsuarioDto {
+                UsuarioID = u.UsuarioID, NombreCompleto = u.NombreCompleto, Email = u.Email,
+                Telefono = u.Telefono, Direccion = u.Direccion, Ciudad = u.Ciudad,
+                RoleID = u.RoleID, RolNombre = u.Rol != null ? u.Rol.Nombre : null,
+                Estado = u.Estado, EmailVerificado = u.EmailVerificado, FechaRegistro = u.FechaRegistro,
+            }).ToListAsync();
         return Ok(ApiResponse<List<UsuarioDto>>.Ok(list));
     }
 
@@ -126,16 +120,10 @@ public class UsuariosController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var uid = User.GetUserId();
-        if (!await _perms.HasPermissionAsync(uid, "usuarios:eliminar")) return Forbid();
+        if (!PermissionHelper.HasPermission(User, "usuarios:eliminar")) return Forbid();
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-
-        var tokens = _db.RefreshTokens.Where(t => t.UsuarioID == id);
-        _db.RefreshTokens.RemoveRange(tokens);
-        var notifs = _db.Notificaciones.Where(n => n.UsuarioID == id);
-        _db.Notificaciones.RemoveRange(notifs);
-
-        _db.Usuarios.Remove(u);
+        u.Estado = "eliminado";
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { }, "Usuario eliminado permanentemente"));
     }
@@ -147,7 +135,7 @@ public class UsuariosController : ControllerBase
         if (!await _perms.HasPermissionAsync(uid, "usuarios:bloquear")) return Forbid();
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-        u.Estado = u.Estado == "activo" ? "inactivo" : "activo";
+        u.Estado = (u.Estado == "activo" || u.Estado == "eliminado") ? "inactivo" : "activo";
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { u.Estado }));
     }

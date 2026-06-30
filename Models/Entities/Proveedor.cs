@@ -27,7 +27,7 @@ public class Proveedor
     [MaxLength(20)]
     public string Estado { get; set; } = "activo";
 
-    public DateTime FechaRegistro { get; set; } = DateTime.Now;
+    public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 
     public ICollection<Compra> Compras { get; set; } = new List<Compra>();
 }

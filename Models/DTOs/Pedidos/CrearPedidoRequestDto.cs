@@ -50,8 +50,7 @@ public class PedidoItemDto
 
     public int? TallaID { get; set; }
     public int? ColorID { get; set; }
-    public string? TallaNombre { get; set; }
-    public string? ColorNombre { get; set; }
+    public decimal? PrecioUnitario { get; set; }
 }
 
 public class ActualizarEstadoPedidoDto

@@ -64,9 +64,7 @@ builder.Services.AddCors(options =>
         policy.SetIsOriginAllowed(origin =>
         {
             var uri = new Uri(origin);
-            // En desarrollo permite cualquier puerto de localhost
             if (!isProduction && (uri.Host == "localhost" || uri.Host == "127.0.0.1")) return true;
-            // En producción solo los orígenes configurados en appsettings.Production.json
             return allowedOrigins.Contains(origin);
         })
         .AllowAnyHeader()
@@ -168,7 +166,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Log.Warning("DB check failed: {Message}. Ensure DATABASE.sql has been executed in SQL Server.", ex.Message);
+        Log.Warning("DB check failed: {Message}", ex.Message);
     }
 }
 

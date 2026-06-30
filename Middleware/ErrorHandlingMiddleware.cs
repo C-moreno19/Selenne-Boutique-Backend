@@ -43,7 +43,6 @@ public class ErrorHandlingMiddleware
         }
         else if (ex is DbUpdateException dbEx)
         {
-            // Violación de FK u otra restricción de la BD → dar mensaje legible en lugar de 500
             status = HttpStatusCode.BadRequest;
             var inner = dbEx.InnerException?.Message ?? dbEx.Message;
             if (inner.Contains("REFERENCE") || inner.Contains("FK_") || inner.Contains("FOREIGN KEY"))

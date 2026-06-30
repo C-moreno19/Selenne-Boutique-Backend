@@ -15,7 +15,8 @@ public class SmtpEmailService : IEmailService
     // Genera un código de referencia que no expone el volumen de ventas al cliente
     private static string Ref(int pedidoId) => $"SLN-{pedidoId + 10000}";
 
-    private async Task SendAsync(string to, string subject, string body)
+    private async Task SendAsync(string to, string subject, string body,
+        byte[]? inlineImageBytes = null, string? inlineImageMime = null, string inlineCid = "paquete_selenne")
     {
         try
         {
@@ -26,7 +27,23 @@ public class SmtpEmailService : IEmailService
             ));
             message.To.Add(MailboxAddress.Parse(to));
             message.Subject = subject;
-            message.Body = new TextPart("html") { Text = body };
+
+            if (inlineImageBytes != null && inlineImageBytes.Length > 0)
+            {
+                var builder = new MimeKit.BodyBuilder();
+                builder.HtmlBody = body;
+                var parts = inlineImageMime?.Split('/');
+                var img = builder.LinkedResources.Add(
+                    "image.jpg", inlineImageBytes,
+                    new MimeKit.ContentType(parts?[0] ?? "image", parts?[1] ?? "jpeg"));
+                img.ContentId = inlineCid;
+                img.ContentDisposition = new MimeKit.ContentDisposition(MimeKit.ContentDisposition.Inline);
+                message.Body = builder.ToMessageBody();
+            }
+            else
+            {
+                message.Body = new TextPart("html") { Text = body };
+            }
 
             using var client = new SmtpClient();
             await client.ConnectAsync(
@@ -49,131 +66,173 @@ public class SmtpEmailService : IEmailService
         }
     }
 
-    private string Wrap(string t, string b) =>
-        "<html><body style='font-family:Arial'>" +
-        "<h1 style='color:#e91e8c'>Selenne Boutique</h1><h2>" + t + "</h2>" + b +
-        "</body></html>";
+    // Layout base: encabezado rosado + contenido blanco + pie de página
+    private string Card(string content) =>
+        "<html><body style='margin:0;padding:0;background:#fdf2f8;font-family:Arial,Helvetica,sans-serif'>" +
+        "<table width='100%' cellpadding='0' cellspacing='0' style='padding:28px 16px'><tr><td>" +
+        "<table width='100%' cellpadding='0' cellspacing='0' style='max-width:500px;margin:0 auto;background:#ffffff;box-shadow:0 2px 12px rgba(214,83,145,.08)'>" +
+        // Header rosado
+        "<tr><td style='background:#d65391;padding:24px 36px'>" +
+        "<p style='margin:0;font-size:13px;font-weight:700;color:#fff;letter-spacing:3px;text-transform:uppercase'>Selenne Boutique</p>" +
+        "</td></tr>" +
+        // Contenido
+        "<tr><td style='padding:28px 36px 24px'>" + content + "</td></tr>" +
+        // Pie
+        "<tr><td style='background:#fdf2f8;padding:14px 36px;text-align:center;border-top:1px solid #fce7f3'>" +
+        "<p style='margin:0;font-size:11px;color:#c084a5;letter-spacing:1px'>© Selenne Boutique — Moda con estilo</p>" +
+        "</td></tr></table></td></tr></table></body></html>";
+
+    private string Header(string titulo) =>
+        "<h1 style='margin:0 0 16px 0;font-size:20px;color:#d65391;font-weight:700;letter-spacing:-0.3px;border-bottom:1px solid #fce7f3;padding-bottom:14px'>" + titulo + "</h1>";
 
     public async Task SendWelcomeEmailAsync(string to, string nombre) =>
-        await SendAsync(to, "Bienvenida a Selenne", Wrap("Bienvenida!", "<p>Hola " + nombre + ", gracias por registrarte en Selenne Boutique.</p>"));
+        await SendAsync(to, "Bienvenida a Selenne Boutique",
+            Card(Header("Cuenta creada") +
+            "<p style='margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, gracias por unirte a Selenne Boutique. Tu cuenta está lista.</p>" +
+            "<p style='margin:0;font-size:13px;color:#9ca3af'>Ahora puedes explorar nuestra colección y realizar pedidos.</p>"));
 
     public async Task SendVerificationEmailAsync(string to, string nombre, string token) =>
-        await SendAsync(to, "Verifica tu email", Wrap("Verificacion", "<p>Hola " + nombre + ", tu token de verificacion es: <b>" + token + "</b>. Expira en 24h.</p>"));
+        await SendAsync(to, "Verifica tu correo — Selenne Boutique",
+            Card(Header("Verificación de correo") +
+            "<p style='margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, usa el siguiente código para verificar tu correo electrónico:</p>" +
+            "<div style='background:#f9f9f9;border-left:3px solid #d65391;padding:14px 20px;margin:0 0 20px'>" +
+            "<p style='margin:0;font-size:22px;font-weight:700;color:#d65391;letter-spacing:4px'>" + token + "</p>" +
+            "</div>" +
+            "<p style='margin:0;font-size:12px;color:#9ca3af'>Este código expira en 24 horas.</p>"));
 
     public async Task SendPasswordResetEmailAsync(string to, string nombre, string token) =>
-        await SendAsync(to, "Restablecer contrasena", Wrap("Recuperar contrasena", "<p>Hola " + nombre + ", tu token para restablecer la contrasena es: <b>" + token + "</b>. Expira en 1h.</p>"));
+        await SendAsync(to, "Restablecer contraseña — Selenne Boutique",
+            Card(Header("Recuperar contraseña") +
+            "<p style='margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, usa el siguiente código para restablecer tu contraseña:</p>" +
+            "<div style='background:#f9f9f9;border-left:3px solid #d65391;padding:14px 20px;margin:0 0 20px'>" +
+            "<p style='margin:0;font-size:22px;font-weight:700;color:#d65391;letter-spacing:4px'>" + token + "</p>" +
+            "</div>" +
+            "<p style='margin:0;font-size:12px;color:#9ca3af'>Este código expira en 1 hora. Si no solicitaste este cambio, ignora este mensaje.</p>"));
 
     public async Task SendPasswordChangedEmailAsync(string to, string nombre) =>
-        await SendAsync(to, "Contrasena actualizada", Wrap("Contrasena cambiada", "<p>Hola " + nombre + ", tu contrasena fue actualizada exitosamente.</p>"));
+        await SendAsync(to, "Contraseña actualizada — Selenne Boutique",
+            Card(Header("Contraseña actualizada") +
+            "<p style='margin:0;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, tu contraseña fue actualizada exitosamente. Si no realizaste este cambio, contáctanos de inmediato.</p>"));
 
     public async Task SendNewUserCreatedEmailAsync(string to, string nombre, string tempPassword) =>
-        await SendAsync(to, "Tu cuenta en Selenne", Wrap("Cuenta creada", "<p>Hola " + nombre + ", tu contrasena temporal es: <b>" + tempPassword + "</b>. Cambiala al ingresar.</p>"));
+        await SendAsync(to, "Tu cuenta en Selenne Boutique",
+            Card(Header("Cuenta creada") +
+            "<p style='margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, tu cuenta fue creada en Selenne Boutique. Tu contraseña temporal es:</p>" +
+            "<div style='background:#f9f9f9;border-left:3px solid #d65391;padding:14px 20px;margin:0 0 20px'>" +
+            "<p style='margin:0;font-size:18px;font-weight:700;color:#111827;letter-spacing:1px'>" + tempPassword + "</p>" +
+            "</div>" +
+            "<p style='margin:0;font-size:12px;color:#9ca3af'>Cambia tu contraseña al ingresar por primera vez.</p>"));
 
     public async Task SendOrderConfirmationClienteAsync(string to, string nombre, int pedidoId, decimal total) =>
-        await SendAsync(to, "Pedido " + Ref(pedidoId) + " confirmado", Wrap("Pedido confirmado",
-            "<p>Hola " + nombre + ", tu pedido <strong>" + Ref(pedidoId) + "</strong> fue recibido exitosamente.</p>" +
-            "<p>Total: <b>$" + total.ToString("N2") + "</b></p>"));
+        await SendAsync(to, "Pedido recibido — Selenne Boutique",
+            Card(Header("Pedido recibido") +
+            "<p style='margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, hemos recibido tu pedido correctamente y pronto comenzaremos a prepararlo.</p>" +
+            "<div style='background:#fafafa;border-left:3px solid #d65391;padding:16px 20px;margin:0 0 20px'>" +
+            "<p style='margin:0;font-size:13px;color:#6b7280'>Total: <strong style='color:#111827'>$" + total.ToString("N0") + "</strong></p>" +
+            "</div>" +
+            "<p style='margin:0;font-size:12px;color:#9ca3af'>Te notificaremos cuando tu pedido sea procesado.</p>"));
 
     public async Task SendOrderConfirmationAdminAsync(string adminEmail, string clienteNombre, int pedidoId, decimal total) =>
-        await SendAsync(adminEmail, "Nuevo pedido #" + pedidoId, Wrap("Nuevo pedido",
-            "<p>Cliente: <b>" + clienteNombre + "</b></p>" +
-            "<p>Total: <b>$" + total.ToString("N2") + "</b></p>"));
+        await SendAsync(adminEmail, "Nuevo pedido " + Ref(pedidoId) + " — Selenne Boutique",
+            Card(Header("Nuevo pedido recibido") +
+            "<div style='background:#fafafa;border-left:3px solid #d65391;padding:16px 20px;margin:0 0 20px'>" +
+            "<p style='margin:0 0 6px;font-size:13px;color:#374151'>Referencia: <strong>" + Ref(pedidoId) + "</strong></p>" +
+            "<p style='margin:0 0 6px;font-size:13px;color:#374151'>Cliente: <strong>" + clienteNombre + "</strong></p>" +
+            "<p style='margin:0;font-size:13px;color:#374151'>Total: <strong>$" + total.ToString("N0") + "</strong></p>" +
+            "</div>" +
+            "<p style='margin:0;font-size:12px;color:#9ca3af'>Ingresa al panel de administración para gestionar el pedido.</p>"));
 
-    public async Task SendOrderStatusUpdateAsync(string to, string nombre, int pedidoId, string nuevoEstado) =>
-        await SendAsync(to, "Pedido " + Ref(pedidoId) + ": " + nuevoEstado, Wrap("Estado actualizado",
-            "<p>Hola " + nombre + ", tu pedido <strong>" + Ref(pedidoId) + "</strong> ahora esta en estado: <b>" + nuevoEstado + "</b></p>"));
+    public async Task SendOrderStatusUpdateAsync(string to, string nombre, int pedidoId, string nuevoEstado, string? motivo = null)
+    {
+        var esRechazo = nuevoEstado is "Rechazado" or "Rechazada";
+        var motivoHtml = esRechazo && !string.IsNullOrWhiteSpace(motivo)
+            ? "<div style='background:#fff5f5;border-left:3px solid #ef4444;padding:14px 20px;margin:12px 0 20px'>" +
+              "<p style='margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#ef4444'>Motivo del rechazo</p>" +
+              "<p style='margin:0;font-size:13px;color:#374151'>" + motivo + "</p></div>"
+            : "";
+
+        await SendAsync(to, nuevoEstado + " — Selenne Boutique",
+            Card(Header("Estado del pedido actualizado") +
+            "<p style='margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, el estado de tu pedido ha sido actualizado.</p>" +
+            "<div style='background:#fafafa;border-left:3px solid #d65391;padding:16px 20px;margin:0 0 16px'>" +
+            "<p style='margin:0;font-size:13px;color:#374151'>Nuevo estado: <strong>" + nuevoEstado + "</strong></p>" +
+            "</div>" +
+            motivoHtml +
+            "<p style='margin:0;font-size:12px;color:#9ca3af'>Si tienes preguntas sobre tu pedido, contáctanos.</p>"));
+    }
 
     public async Task SendPendingPaymentEmailAsync(string to, string nombre, int pedidoId, decimal total, string mensaje, string banco, string cuenta, string titular, string tipoCuenta)
     {
         var whatsapp = _config["BankAccount:WhatsApp"] ?? "";
-        var accountInfo = $"Banco: {banco} | Cuenta: {cuenta} | Titular: {titular}";
-        var qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?data={Uri.EscapeDataString(accountInfo)}&size=200x200&bgcolor=ffffff";
-        var waText = Uri.EscapeDataString($"Hola, adjunto el comprobante de pago del pedido {Ref(pedidoId)} por ${total:N0}");
+        var waText = Uri.EscapeDataString($"Hola, adjunto el comprobante de pago de mi pedido por ${total:N0}");
         var waUrl = $"https://wa.me/{whatsapp}?text={waText}";
 
+        // Usar el mismo QR estático del checkout si existe
+        var qrPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "qr-transferencia.png");
+        byte[]? qrBytes = System.IO.File.Exists(qrPath) ? await System.IO.File.ReadAllBytesAsync(qrPath) : null;
+        var qrImg = qrBytes != null
+            ? "<img src='cid:qr_selenne' alt='QR transferencia' style='border:1px solid #e5e7eb;padding:4px;max-width:200px' />"
+            : "";
+
         var waSection = string.IsNullOrEmpty(whatsapp) ? "" :
-            "<div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin:24px 0;text-align:center'>" +
-            "<p style='margin:0 0 6px 0;font-size:14px;color:#374151;font-weight:600'>📲 Envía tu comprobante por WhatsApp</p>" +
-            "<p style='margin:0 0 16px 0;font-size:13px;color:#6b7280'>Una vez realizada la transferencia, envíanos la foto del comprobante al siguiente número:</p>" +
-            "<p style='margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#16a34a;letter-spacing:1px'>+" + whatsapp + "</p>" +
-            "<a href='" + waUrl + "' style='display:inline-block;background:#25d366;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold'>" +
-            "💬 Abrir WhatsApp" +
-            "</a>" +
-            "<p style='margin:12px 0 0 0;font-size:11px;color:#9ca3af'>Indica en el mensaje tu número de referencia: <strong>" + Ref(pedidoId) + "</strong></p>" +
+            "<div style='background:#fafafa;border:1px solid #f0f0f0;padding:16px 20px;margin:16px 0'>" +
+            "<p style='margin:0 0 4px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px'>Comprobante por WhatsApp</p>" +
+            "<p style='margin:0 0 12px;font-size:13px;color:#374151'>Una vez transferido, envía tu comprobante al siguiente número:</p>" +
+            "<p style='margin:0 0 12px;font-size:18px;font-weight:700;color:#16a34a;letter-spacing:1px'>+" + whatsapp + "</p>" +
+            "<a href='" + waUrl + "' style='display:inline-block;background:#25d366;color:white;padding:10px 24px;text-decoration:none;font-size:13px;font-weight:600'>Abrir WhatsApp</a>" +
             "</div>";
 
-        var body =
-            "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>" +
-            "<div style='background:linear-gradient(135deg,#d65391,#f8a9c5);padding:30px;text-align:center;border-radius:12px 12px 0 0'>" +
-            "<h1 style='color:white;margin:0;font-size:28px'>Selenne Boutique</h1></div>" +
-            "<div style='background:white;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px'>" +
-            "<h2 style='color:#d65391'>💳 Información de Pago — Pedido " + Ref(pedidoId) + "</h2>" +
-            "<p>Hola <strong>" + nombre + "</strong>,</p>" +
-            (string.IsNullOrWhiteSpace(mensaje) ? "" : "<p style='background:#fef9c3;border-left:4px solid #eab308;padding:12px 16px;border-radius:6px'>" + mensaje + "</p>") +
-            "<p>Para completar tu pedido por <strong>$" + total.ToString("N0") + "</strong>, realiza la transferencia a la siguiente cuenta:</p>" +
-            "<table style='width:100%;border-collapse:collapse;margin:20px 0'>" +
-            "<tr style='background:#f9fafb'><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:bold;color:#6b7280;font-size:13px'>Banco</td><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:600'>" + banco + "</td></tr>" +
-            "<tr><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:bold;color:#6b7280;font-size:13px'>Número de cuenta</td><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:600;font-size:16px;color:#d65391'>" + cuenta + "</td></tr>" +
-            "<tr style='background:#f9fafb'><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:bold;color:#6b7280;font-size:13px'>Titular</td><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:600'>" + titular + "</td></tr>" +
-            "<tr><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:bold;color:#6b7280;font-size:13px'>Tipo de cuenta</td><td style='padding:10px 14px;border:1px solid #e5e7eb;font-weight:600'>" + tipoCuenta + "</td></tr>" +
+        var content =
+            Header("Información de pago") +
+            "<p style='margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, para completar tu pedido por <strong>$" + total.ToString("N0") + "</strong>, realiza la transferencia a:</p>" +
+            (string.IsNullOrWhiteSpace(mensaje) ? "" : "<div style='background:#fef9c3;border-left:3px solid #eab308;padding:12px 16px;margin:0 0 16px'><p style='margin:0;font-size:13px;color:#374151'>" + mensaje + "</p></div>") +
+            "<table style='width:100%;border-collapse:collapse;margin:0 0 16px'>" +
+            "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af;width:40%'>Banco</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:13px;font-weight:600'>" + banco + "</td></tr>" +
+            "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Número de cuenta</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:15px;font-weight:700;color:#d65391'>" + cuenta + "</td></tr>" +
+            "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Titular</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:13px;font-weight:600'>" + titular + "</td></tr>" +
+            "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Tipo</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:13px;font-weight:600'>" + tipoCuenta + "</td></tr>" +
             "</table>" +
-            "<div style='text-align:center;margin:24px 0'>" +
-            "<p style='color:#6b7280;margin-bottom:10px'>Escanea el código QR para guardar los datos bancarios:</p>" +
-            "<img src='" + qrUrl + "' alt='QR pago' style='border:1px solid #e5e7eb;border-radius:8px;padding:6px' />" +
-            "</div>" +
-            waSection +
-            "<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'>" +
-            "<p style='font-size:12px;color:#9ca3af;text-align:center'>Selenne Boutique — Moda con estilo</p>" +
-            "</div></body></html>";
-        await SendAsync(to, "Pedido " + Ref(pedidoId) + " — Información de pago", body);
+            (qrImg != "" ? "<div style='text-align:center;margin:0 0 16px'>" +
+            "<p style='margin:0 0 8px;font-size:12px;color:#9ca3af'>Escanea el código QR con los datos bancarios:</p>" +
+            qrImg + "</div>" : "") +
+            waSection;
+        await SendAsync(to, "Información de pago — Selenne Boutique", Card(content), qrBytes, "image/png", "qr_selenne");
     }
 
-    public async Task SendShippingNotificationEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, string? fotoUrl)
+    public async Task SendShippingNotificationEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, byte[]? fotoBytes = null, string? fotoMimeType = null, string? confirmarUrl = null)
     {
-        var body =
-            "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>" +
-            "<div style='background:linear-gradient(135deg,#d65391,#f8a9c5);padding:30px;text-align:center;border-radius:12px 12px 0 0'>" +
-            "<h1 style='color:white;margin:0;font-size:28px'>Selenne Boutique</h1></div>" +
-            "<div style='background:white;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px'>" +
-            "<h2 style='color:#16a34a'>🚚 ¡Tu pedido está en camino!</h2>" +
-            "<p>Hola <strong>" + nombre + "</strong>,</p>" +
-            "<p>Tu pedido <strong>" + Ref(pedidoId) + "</strong> ha sido despachado y está en camino a tu dirección.</p>" +
+        var hasPhoto = fotoBytes != null && fotoBytes.Length > 0;
+        var content =
+            Header("Tu pedido está en camino") +
+            "<p style='margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, tu pedido fue despachado y está en camino a tu dirección.</p>" +
             (string.IsNullOrEmpty(numeroGuia) ? "" :
-                "<div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0'>" +
-                "<p style='margin:0 0 6px 0;color:#6b7280;font-size:13px;font-weight:bold'>NÚMERO DE GUÍA</p>" +
-                "<p style='margin:0;font-size:22px;font-weight:bold;color:#16a34a;letter-spacing:1px'>" + numeroGuia + "</p>" +
-                (string.IsNullOrEmpty(transportadora) ? "" : "<p style='margin:6px 0 0 0;color:#374151;font-size:14px'>Transportadora: <strong>" + transportadora + "</strong></p>") +
+                "<div style='background:#fafafa;border-left:3px solid #16a34a;padding:14px 20px;margin:0 0 16px'>" +
+                "<p style='margin:0 0 4px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px'>Número de guía</p>" +
+                "<p style='margin:0 0 4px;font-size:20px;font-weight:700;color:#16a34a;letter-spacing:2px'>" + numeroGuia + "</p>" +
+                (string.IsNullOrEmpty(transportadora) ? "" : "<p style='margin:0;font-size:12px;color:#6b7280'>Transportadora: <strong>" + transportadora + "</strong></p>") +
                 "</div>") +
-            (string.IsNullOrEmpty(fotoUrl) ? "" :
-                "<div style='text-align:center;margin:20px 0'>" +
-                "<p style='color:#6b7280;margin-bottom:10px;font-size:14px'>📸 Foto del paquete despachado:</p>" +
-                "<img src='" + fotoUrl + "' alt='Paquete' style='max-width:100%;max-height:300px;border-radius:10px;border:1px solid #e5e7eb' />" +
-                "</div>") +
-            "<p style='font-size:14px;color:#374151'>Pronto recibirás tu pedido. ¡Gracias por comprar en Selenne Boutique!</p>" +
-            "<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'>" +
-            "<p style='font-size:12px;color:#9ca3af;text-align:center'>Selenne Boutique — Moda con estilo</p>" +
-            "</div></body></html>";
-        await SendAsync(to, "🚚 Tu pedido " + Ref(pedidoId) + " fue despachado - Selenne Boutique", body);
+            (hasPhoto ?
+                "<div style='margin:0 0 16px'>" +
+                "<p style='margin:0 0 8px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px'>Foto del paquete</p>" +
+                "<img src='cid:paquete_selenne' alt='Paquete despachado' style='width:100%;max-width:100%;border:1px solid #e5e7eb;display:block' />" +
+                "</div>" : "") +
+            (string.IsNullOrEmpty(confirmarUrl) ? "" :
+                "<div style='background:#fafafa;border:1px solid #f0f0f0;padding:20px;margin:0 0 4px;text-align:center'>" +
+                "<p style='margin:0 0 4px;font-size:13px;color:#374151;font-weight:600'>¿Ya recibiste tu pedido?</p>" +
+                "<p style='margin:0 0 16px;font-size:12px;color:#9ca3af'>Confirma la entrega cuando lo hayas recibido en casa.</p>" +
+                "<a href='" + confirmarUrl + "' style='display:inline-block;background:#d65391;color:white;padding:12px 32px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.3px'>Confirmar recepción</a>" +
+                "</div>");
+        await SendAsync(to, "Tu pedido ha sido despachado — Selenne Boutique", Card(content),
+            hasPhoto ? fotoBytes : null, fotoMimeType);
     }
 
-    public async Task SendOrderApprovedAsync(string to, string nombre, int pedidoId, decimal total, string confirmarUrl) =>
-        await SendAsync(to, "✅ Tu pedido " + Ref(pedidoId) + " fue aprobado - Selenne Boutique",
-            "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>" +
-            "<div style='background:linear-gradient(135deg,#d65391,#f8a9c5);padding:30px;text-align:center;border-radius:12px 12px 0 0'>" +
-            "<h1 style='color:white;margin:0;font-size:28px'>Selenne Boutique</h1></div>" +
-            "<div style='background:white;padding:30px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px'>" +
-            "<h2 style='color:#16a34a'>✅ ¡Tu pedido fue aprobado!</h2>" +
-            "<p>Hola <strong>" + nombre + "</strong>,</p>" +
-            "<p>Tu pedido <strong>" + Ref(pedidoId) + "</strong> ha sido aprobado y será enviado en las próximas <strong>72 horas</strong>.</p>" +
-            "<p style='color:#6b7280'>Total: <strong>$" + total.ToString("N0") + "</strong></p>" +
-            "<p>Cuando recibas tu pedido, confirma la entrega haciendo clic en el siguiente botón:</p>" +
-            "<div style='text-align:center;margin:36px 0'>" +
-            "<a href='" + confirmarUrl + "' style='background:linear-gradient(135deg,#d65391,#b8306e);color:white;padding:18px 44px;border-radius:50px;text-decoration:none;font-size:17px;font-weight:700;display:inline-block;box-shadow:0 6px 20px rgba(214,83,145,0.45);letter-spacing:0.3px'>📦 Ya recibí mi pedido</a>" +
+    public async Task SendOrderApprovedAsync(string to, string nombre, int pedidoId, decimal total) =>
+        await SendAsync(to, "Pedido aprobado — Selenne Boutique",
+            Card(Header("Pedido aprobado") +
+            "<p style='margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, tu pedido ha sido aprobado y será enviado en las próximas 72 horas.</p>" +
+            "<div style='background:#fafafa;border-left:3px solid #d65391;padding:14px 20px;margin:0 0 20px'>" +
+            "<p style='margin:0 0 4px;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px'>Total</p>" +
+            "<p style='margin:0;font-size:18px;font-weight:700;color:#111827'>$" + total.ToString("N0") + "</p>" +
             "</div>" +
-            "<p style='font-size:13px;color:#9ca3af;text-align:center;margin-top:-10px'>Toca el botón cuando hayas recibido tu pedido en casa</p>" +
-            "<p style='font-size:12px;color:#9ca3af'>Si no puedes hacer clic en el botón, copia y pega este enlace en tu navegador:<br>" +
-            "<a href='" + confirmarUrl + "' style='color:#d65391'>" + confirmarUrl + "</a></p>" +
-            "<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'>" +
-            "<p style='font-size:12px;color:#9ca3af;text-align:center'>Selenne Boutique — Moda con estilo</p>" +
-            "</div></body></html>");
+            "<p style='margin:0;font-size:13px;color:#9ca3af'>Te notificaremos cuando tu pedido sea despachado con la información de envío.</p>"));
 }
