@@ -14,13 +14,13 @@ public class Compra
     [Required, MaxLength(50)]
     public string OrdenFactura { get; set; } = string.Empty;
 
-    public DateTime Fecha { get; set; } = DateTime.Now;
+    public DateTime Fecha { get; set; } = DateTime.UtcNow;
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal Total { get; set; }
 
     [MaxLength(20)]
-    public string Estado { get; set; } = "Activa";
+    public string Estado { get; set; } = "Pendiente";
 
     public string? Notas { get; set; }
 

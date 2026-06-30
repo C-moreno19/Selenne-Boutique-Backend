@@ -431,7 +431,7 @@ public class ProveedoresController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
-        var items = await _db.Proveedores.OrderBy(p => p.Nombre).ToListAsync();
+        var items = await _db.Proveedores.Where(p => p.Estado == "activo").OrderBy(p => p.Nombre).ToListAsync();
         return Ok(ApiResponse<object>.Ok(items));
     }
 
@@ -598,7 +598,7 @@ public class ComprasController : ControllerBase
         {
             ProveedorID = dto.ProveedorID,
             OrdenFactura = dto.OrdenFactura,
-            Fecha = dto.Fecha ?? DateTime.Now,
+            Fecha = dto.Fecha ?? DateTime.UtcNow,
             Total = dto.Total,
             Estado = "Pendiente",
             Notas = dto.Notas
@@ -606,7 +606,7 @@ public class ComprasController : ControllerBase
         _db.Compras.Add(compra);
         await _db.SaveChangesAsync();
 
-        if (dto.Detalles != null && dto.Detalles.Count > 0)
+        if (dto.Detalles != null && dto.Detalles.Any())
         {
             foreach (var d in dto.Detalles)
             {
@@ -618,11 +618,13 @@ public class ComprasController : ControllerBase
                     PrecioUnitario = d.PrecioUnitario,
                     Total = d.Total
                 });
+                var prod = await _db.Productos.FindAsync(d.ProductoID);
+                if (prod != null) prod.Stock += d.Cantidad;
             }
             await _db.SaveChangesAsync();
         }
 
-        return Ok(ApiResponse<object>.Ok(new { compraID = compra.CompraID }));
+        return Ok(ApiResponse<object>.Ok(new { compraID = compra.CompraID }, "Compra registrada"));
     }
 
     [HttpPut("{id}")]
@@ -733,7 +735,7 @@ public class VentasController : ControllerBase
             Envio = dto.Envio,
             Total = dto.Total,
             Estado = "Pendiente",
-            FechaVenta = DateTime.Now
+            FechaVenta = DateTime.UtcNow
         };
         _db.Ventas.Add(venta);
         await _db.SaveChangesAsync();

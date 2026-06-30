@@ -90,7 +90,7 @@ public class ProductosController : ControllerBase
         if (dto.Stock.HasValue) p.Stock = dto.Stock.Value;
         if (dto.Estado != null) p.Estado = dto.Estado;
         if (dto.ImagenPrincipal != null) p.ImagenPrincipal = dto.ImagenPrincipal;
-        p.FechaActualizacion = DateTime.Now;
+        p.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(null, "Actualizado"));
     }
@@ -104,7 +104,6 @@ public class ProductosController : ControllerBase
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
 
-        // Bloquear si tiene historial de negocio (pedidos, ventas, compras)
         var bloqueos = new List<string>();
 
         if (await _db.PedidoDetalles.AnyAsync(d => d.ProductoID == id))
@@ -126,10 +125,9 @@ public class ProductosController : ControllerBase
 
         try
         {
-            // Eliminar registros secundarios que no son historial de negocio
             var carritoItems = _db.Carrito.Where(c => c.ProductoID == id);
             _db.Carrito.RemoveRange(carritoItems);
-
+            _db.Favoritos.RemoveRange(_db.Favoritos.Where(x => x.ProductoID == id));
             _db.Productos.Remove(p);
             await _db.SaveChangesAsync();
             return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
@@ -196,7 +194,7 @@ public class ProductosController : ControllerBase
     }
 
     // POST /api/productos/{id}/variantes — Stock por talla+color
-    [HttpPost("{id}/variantes")]
+    [HttpPost("{id}/variantes"), Authorize]
     public async Task<IActionResult> SetVariantes(int id, [FromBody] SetVariantesDto dto)
     {
         var p = await _db.Productos
@@ -256,7 +254,7 @@ public class ProductosController : ControllerBase
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
         p.PrecioOferta = Math.Round(p.PrecioVenta * (1 - dto.PorcentajeDescuento / 100), 2);
-        p.FechaActualizacion = DateTime.Now;
+        p.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { p.PrecioOferta }, "Descuento aplicado"));
     }

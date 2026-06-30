@@ -17,11 +17,11 @@ public class PedidoDto
     public string Estado { get; set; } = string.Empty;
     public string? NumeroGuia { get; set; }
     public string? Transportadora { get; set; }
+    public string? ComprobantePago { get; set; }
     public DateTime FechaPedido { get; set; }
     public DateTime? FechaEnvio { get; set; }
     public DateTime? FechaEntrega { get; set; }
     public string? Notas { get; set; }
-    public string? ComprobantePago { get; set; }
     public List<PedidoDetalleDto> Detalles { get; set; } = new();
 }
 

@@ -14,11 +14,11 @@ public class RateLimitingMiddleware
         {
             if (_counts.TryGetValue(key, out var entry))
             {
-                if (DateTime.Now > entry.reset) _counts[key] = (1, DateTime.Now.AddMinutes(1));
+                if (DateTime.UtcNow > entry.reset) _counts[key] = (1, DateTime.UtcNow.AddMinutes(1));
                 else if (entry.count > 100) { context.Response.StatusCode = 429; return; }
                 else _counts[key] = (entry.count + 1, entry.reset);
             }
-            else _counts[key] = (1, DateTime.Now.AddMinutes(1));
+            else _counts[key] = (1, DateTime.UtcNow.AddMinutes(1));
         }
         await _next(context);
     }

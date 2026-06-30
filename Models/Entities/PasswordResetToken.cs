@@ -17,7 +17,7 @@ public class PasswordResetToken
     public DateTime ExpiresAt { get; set; }
     public bool Used { get; set; } = false;
     public DateTime? UsedAt { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [ForeignKey("UsuarioID")]
     public Usuario Usuario { get; set; } = null!;

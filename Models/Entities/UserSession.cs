@@ -18,8 +18,8 @@ public class UserSession
     [MaxLength(50)]
     public string? IPAddress { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public DateTime LastSeenAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
     public bool Revoked { get; set; } = false;
 
     [ForeignKey("UsuarioID")]
