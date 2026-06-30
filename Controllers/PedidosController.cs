@@ -533,6 +533,7 @@ public class PedidosController : ControllerBase
     {
         PedidoID = p.PedidoID, ClienteID = p.ClienteID, FechaPedido = p.FechaPedido,
         NombreCliente = p.NombreCliente, EmailCliente = p.EmailCliente, TelefonoCliente = p.TelefonoCliente,
+        DocumentoCliente = p.DocumentoCliente,
         DireccionEnvio = p.DireccionEnvio, Ciudad = p.Ciudad, MetodoPago = p.MetodoPago,
         Subtotal = p.Subtotal, Descuento = p.Descuento, Envio = p.Envio, Total = p.Total,
         Estado = p.Estado, NumeroGuia = p.NumeroGuia, Transportadora = p.Transportadora,
