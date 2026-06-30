@@ -1,0 +1,11 @@
+bin/
+obj/
+logs/
+.vs/
+*.user
+wwwroot/uploads/
+appsettings.Development.json
+appsettings.Production.json
+.gitignore
+DATABASE.sql
+SelenneApi.Tests/

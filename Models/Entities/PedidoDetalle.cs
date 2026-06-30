@@ -13,6 +13,9 @@ public class PedidoDetalle
     public int ProductoID { get; set; }
     public int? TallaID { get; set; }
     public int? ColorID { get; set; }
+    public string? TallaNombre { get; set; }
+    public string? ColorNombre { get; set; }
+    public string? ImagenProducto { get; set; }
     public int Cantidad { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]

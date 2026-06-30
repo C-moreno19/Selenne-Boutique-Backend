@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 bin/
+=======
+﻿bin/
+>>>>>>> fa1a2575ca5d64eae125a3e496540265a9746217
 obj/
 logs/
 *.user

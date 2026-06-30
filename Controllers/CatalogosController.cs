@@ -19,6 +19,7 @@ public class ColoresController : ControllerBase
     public ColoresController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Colores.OrderBy(c => c.Nombre).ToListAsync();
@@ -26,6 +27,7 @@ public class ColoresController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Colores.FindAsync(id);
@@ -86,6 +88,7 @@ public class TallasController : ControllerBase
     public TallasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Tallas.OrderBy(t => t.Orden).ThenBy(t => t.Nombre).ToListAsync();
@@ -93,6 +96,7 @@ public class TallasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Tallas.FindAsync(id);
@@ -151,6 +155,7 @@ public class MarcasController : ControllerBase
     public MarcasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Marcas.OrderBy(m => m.Nombre).ToListAsync();
@@ -158,6 +163,7 @@ public class MarcasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Marcas.FindAsync(id);
@@ -170,7 +176,7 @@ public class MarcasController : ControllerBase
     {
         if (await _db.Marcas.AnyAsync(m => m.Nombre == dto.Nombre))
             return BadRequest(ApiResponse<object>.Fail("Ya existe una marca con ese nombre"));
-        var item = new Marca { Nombre = dto.Nombre, Logo = dto.Logo, SitioWeb = dto.SitioWeb, Estado = "activo" };
+        var item = new Marca { Nombre = dto.Nombre, Estado = "activo" };
         _db.Marcas.Add(item);
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -182,8 +188,6 @@ public class MarcasController : ControllerBase
         var item = await _db.Marcas.FindAsync(id);
         if (item == null) return NotFound(ApiResponse<object>.Fail("Marca no encontrada"));
         item.Nombre = dto.Nombre;
-        item.Logo = dto.Logo;
-        item.SitioWeb = dto.SitioWeb;
         if (dto.Estado != null) item.Estado = dto.Estado;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -203,8 +207,6 @@ public class MarcasController : ControllerBase
 public class MarcaDto
 {
     public string Nombre { get; set; } = string.Empty;
-    public string? Logo { get; set; }
-    public string? SitioWeb { get; set; }
     public string? Estado { get; set; }
 }
 
@@ -220,6 +222,7 @@ public class MaterialesController : ControllerBase
     public MaterialesController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Materiales.OrderBy(m => m.Nombre).ToListAsync();
@@ -227,6 +230,7 @@ public class MaterialesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Materiales.FindAsync(id);
@@ -239,7 +243,7 @@ public class MaterialesController : ControllerBase
     {
         if (await _db.Materiales.AnyAsync(m => m.Nombre == dto.Nombre))
             return BadRequest(ApiResponse<object>.Fail("Ya existe un material con ese nombre"));
-        var item = new Material { Nombre = dto.Nombre, Descripcion = dto.Descripcion, Estado = "activo" };
+        var item = new Material { Nombre = dto.Nombre, Estado = "activo" };
         _db.Materiales.Add(item);
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -251,7 +255,6 @@ public class MaterialesController : ControllerBase
         var item = await _db.Materiales.FindAsync(id);
         if (item == null) return NotFound(ApiResponse<object>.Fail("Material no encontrado"));
         item.Nombre = dto.Nombre;
-        item.Descripcion = dto.Descripcion;
         if (dto.Estado != null) item.Estado = dto.Estado;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -287,6 +290,7 @@ public class CategoriasController : ControllerBase
     public CategoriasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.CategoriasPrincipales.OrderBy(c => c.Nombre).ToListAsync();
@@ -294,6 +298,7 @@ public class CategoriasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.CategoriasPrincipales.FindAsync(id);
@@ -318,7 +323,6 @@ public class CategoriasController : ControllerBase
         var item = await _db.CategoriasPrincipales.FindAsync(id);
         if (item == null) return NotFound(ApiResponse<object>.Fail("Categoría no encontrada"));
         item.Nombre = dto.Nombre;
-        item.Descripcion = dto.Descripcion;
         item.Imagen = dto.Imagen;
         if (dto.Estado != null) item.Estado = dto.Estado;
         await _db.SaveChangesAsync();
@@ -356,6 +360,7 @@ public class TiposProductoController : ControllerBase
     public TiposProductoController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.TiposProducto.OrderBy(t => t.Nombre).ToListAsync();
@@ -363,6 +368,7 @@ public class TiposProductoController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.TiposProducto.FindAsync(id);
@@ -375,7 +381,7 @@ public class TiposProductoController : ControllerBase
     {
         if (await _db.TiposProducto.AnyAsync(t => t.Nombre == dto.Nombre))
             return BadRequest(ApiResponse<object>.Fail("Ya existe un tipo con ese nombre"));
-        var item = new TipoProducto { Nombre = dto.Nombre, Descripcion = dto.Descripcion, Estado = "activo" };
+        var item = new TipoProducto { Nombre = dto.Nombre, Estado = "activo" };
         _db.TiposProducto.Add(item);
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -387,7 +393,6 @@ public class TiposProductoController : ControllerBase
         var item = await _db.TiposProducto.FindAsync(id);
         if (item == null) return NotFound(ApiResponse<object>.Fail("Tipo de producto no encontrado"));
         item.Nombre = dto.Nombre;
-        item.Descripcion = dto.Descripcion;
         if (dto.Estado != null) item.Estado = dto.Estado;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -423,6 +428,7 @@ public class ProveedoresController : ControllerBase
     public ProveedoresController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Proveedores.Where(p => p.Estado == "activo").OrderBy(p => p.Nombre).ToListAsync();
@@ -430,6 +436,7 @@ public class ProveedoresController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Proveedores
@@ -471,6 +478,16 @@ public class ProveedoresController : ControllerBase
         return Ok(ApiResponse<object>.Ok(item));
     }
 
+    [HttpPut("{id}/estado")]
+    public async Task<IActionResult> UpdateEstado(int id, [FromBody] ProveedorEstadoDto dto)
+    {
+        var item = await _db.Proveedores.FindAsync(id);
+        if (item == null) return NotFound(ApiResponse<object>.Fail("Proveedor no encontrado"));
+        item.Estado = dto.Estado;
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { proveedorID = item.ProveedorID, estado = item.Estado }));
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -480,6 +497,11 @@ public class ProveedoresController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok("Proveedor eliminado"));
     }
+}
+
+public class ProveedorEstadoDto
+{
+    public string Estado { get; set; } = string.Empty;
 }
 
 public class ProveedorDto
@@ -504,41 +526,66 @@ public class ComprasController : ControllerBase
     public ComprasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var items = await _db.Compras
             .Include(c => c.Proveedor)
-            .Include(c => c.Detalles)
+            .Include(c => c.Detalles).ThenInclude(d => d.Producto)
             .OrderByDescending(c => c.Fecha)
-            .Select(c => new {
-                c.CompraID, c.OrdenFactura, c.Fecha, c.Total, c.Estado, c.Notas,
-                proveedor = new { c.Proveedor.ProveedorID, c.Proveedor.Nombre, c.Proveedor.Documento },
-                detalles = c.Detalles.Select(d => new {
-                    d.CompraDetalleID, d.ProductoID, d.Cantidad, d.PrecioUnitario, d.Total
-                })
-            })
             .ToListAsync();
-        return Ok(ApiResponse<object>.Ok(items));
+
+        var result = items.Select(c => new {
+            compraID = c.CompraID,
+            proveedorID = c.ProveedorID,
+            proveedor = c.Proveedor == null ? null : new { nombre = c.Proveedor.Nombre, documento = c.Proveedor.Documento },
+            ordenFactura = c.OrdenFactura,
+            fecha = c.Fecha,
+            total = c.Total,
+            estado = c.Estado,
+            notas = c.Notas,
+            detalles = c.Detalles.Select(d => new {
+                productoID = d.ProductoID,
+                nombreProducto = d.Producto?.Nombre ?? "",
+                cantidad = d.Cantidad,
+                precioUnitario = d.PrecioUnitario,
+                total = d.Total
+            }).ToList()
+        });
+
+        return Ok(ApiResponse<object>.Ok(result));
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
-        var item = await _db.Compras
+        var c = await _db.Compras
             .Include(c => c.Proveedor)
             .Include(c => c.Detalles).ThenInclude(d => d.Producto)
-            .Where(c => c.CompraID == id)
-            .Select(c => new {
-                c.CompraID, c.OrdenFactura, c.Fecha, c.Total, c.Estado, c.Notas,
-                proveedor = new { c.Proveedor.ProveedorID, c.Proveedor.Nombre, c.Proveedor.Documento },
-                detalles = c.Detalles.Select(d => new {
-                    d.CompraDetalleID, d.ProductoID, d.Cantidad, d.PrecioUnitario, d.Total,
-                    productoNombre = d.Producto.Nombre
-                })
-            })
-            .FirstOrDefaultAsync();
-        if (item == null) return NotFound(ApiResponse<object>.Fail("Compra no encontrada"));
-        return Ok(ApiResponse<object>.Ok(item));
+            .FirstOrDefaultAsync(x => x.CompraID == id);
+        if (c == null) return NotFound(ApiResponse<object>.Fail("Compra no encontrada"));
+
+        var result = new
+        {
+            compraID = c.CompraID,
+            proveedorID = c.ProveedorID,
+            proveedor = c.Proveedor == null ? null : new { nombre = c.Proveedor.Nombre, documento = c.Proveedor.Documento },
+            ordenFactura = c.OrdenFactura,
+            fecha = c.Fecha,
+            total = c.Total,
+            estado = c.Estado,
+            notas = c.Notas,
+            detalles = c.Detalles.Select(d => new {
+                productoID = d.ProductoID,
+                nombreProducto = d.Producto?.Nombre ?? "",
+                cantidad = d.Cantidad,
+                precioUnitario = d.PrecioUnitario,
+                total = d.Total
+            }).ToList()
+        };
+
+        return Ok(ApiResponse<object>.Ok(result));
     }
 
     [HttpPost]
@@ -559,35 +606,51 @@ public class ComprasController : ControllerBase
         _db.Compras.Add(compra);
         await _db.SaveChangesAsync();
 
-        foreach (var d in dto.Detalles)
+        if (dto.Detalles != null && dto.Detalles.Any())
         {
-            var detalle = new CompraDetalle
+            foreach (var d in dto.Detalles)
             {
-                CompraID = compra.CompraID,
-                ProductoID = d.ProductoID,
-                Cantidad = d.Cantidad,
-                PrecioUnitario = d.PrecioUnitario,
-                Total = d.Total
-            };
-            _db.CompraDetalles.Add(detalle);
-
-            var prod = await _db.Productos.FindAsync(d.ProductoID);
-            if (prod != null) prod.Stock += d.Cantidad;
+                _db.CompraDetalles.Add(new CompraDetalle
+                {
+                    CompraID = compra.CompraID,
+                    ProductoID = d.ProductoID,
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario,
+                    Total = d.Total
+                });
+                var prod = await _db.Productos.FindAsync(d.ProductoID);
+                if (prod != null) prod.Stock += d.Cantidad;
+            }
+            await _db.SaveChangesAsync();
         }
-
-        if (dto.Detalles.Any()) await _db.SaveChangesAsync();
 
         return Ok(ApiResponse<object>.Ok(new { compraID = compra.CompraID }, "Compra registrada"));
     }
 
+    [HttpPut("{id}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Update(int id, [FromBody] CompraDto dto)
+    {
+        var item = await _db.Compras.FindAsync(id);
+        if (item == null) return NotFound(ApiResponse<object>.Fail("Compra no encontrada"));
+        item.ProveedorID = dto.ProveedorID;
+        item.OrdenFactura = dto.OrdenFactura;
+        item.Fecha = dto.Fecha ?? item.Fecha;
+        item.Total = dto.Total;
+        if (dto.Notas != null) item.Notas = dto.Notas;
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { compraID = item.CompraID }));
+    }
+
     [HttpPut("{id}/estado")]
+    [AllowAnonymous]
     public async Task<IActionResult> UpdateEstado(int id, [FromBody] EstadoDto dto)
     {
         var item = await _db.Compras.FindAsync(id);
         if (item == null) return NotFound(ApiResponse<object>.Fail("Compra no encontrada"));
         item.Estado = dto.Estado;
         await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(item));
+        return Ok(ApiResponse<object>.Ok(new { estado = item.Estado }));
     }
 
     [HttpDelete("{id}")]
@@ -601,6 +664,14 @@ public class ComprasController : ControllerBase
     }
 }
 
+public class CompraDetalleDto
+{
+    public int ProductoID { get; set; }
+    public int Cantidad { get; set; }
+    public decimal PrecioUnitario { get; set; }
+    public decimal Total { get; set; }
+}
+
 public class CompraDto
 {
     public int ProveedorID { get; set; }
@@ -608,15 +679,7 @@ public class CompraDto
     public DateTime? Fecha { get; set; }
     public decimal Total { get; set; }
     public string? Notas { get; set; }
-    public List<CompraDetalleDto> Detalles { get; set; } = new();
-}
-
-public class CompraDetalleDto
-{
-    public int ProductoID { get; set; }
-    public int Cantidad { get; set; }
-    public decimal PrecioUnitario { get; set; }
-    public decimal Total { get; set; }
+    public List<CompraDetalleDto>? Detalles { get; set; }
 }
 
 // ─────────────────────────────────────────────
@@ -631,6 +694,7 @@ public class VentasController : ControllerBase
     public VentasController(AppDbContext db) { _db = db; }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? estado = null,
         [FromQuery] DateTime? desde = null,
@@ -649,6 +713,7 @@ public class VentasController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var item = await _db.Ventas
@@ -678,6 +743,7 @@ public class VentasController : ControllerBase
     }
 
     [HttpPut("{id}/estado")]
+    [AllowAnonymous]
     public async Task<IActionResult> UpdateEstado(int id, [FromBody] EstadoDto dto)
     {
         var item = await _db.Ventas.FindAsync(id);
@@ -702,3 +768,4 @@ public class EstadoDto
 {
     public string Estado { get; set; } = string.Empty;
 }
+

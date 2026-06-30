@@ -18,8 +18,10 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=localhost\\SQLEXPRESS;Database=SelenneDB;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -29,7 +31,9 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:SecretKey"]!;
+var jwtKey = builder.Configuration["Jwt:SecretKey"]
+    ?? "***REMOVED***";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -38,9 +42,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "SelenneApi",
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "SelenneClient",
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
@@ -52,33 +56,37 @@ builder.Services.AddAuthorization();
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? new[] { "http://localhost:5173", "http://localhost:3000" };
 
+var isProduction = builder.Environment.IsProduction();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy
-            .SetIsOriginAllowed(origin =>
-            {
-                var uri = new Uri(origin);
-                // Permitir cualquier puerto en localhost (web dev, Flutter web, etc.)
-                if (uri.Host == "localhost" || uri.Host == "127.0.0.1") return true;
-                // Orígenes explícitos de producción
-                return allowedOrigins.Contains(origin);
-            })
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+        policy.SetIsOriginAllowed(origin =>
+        {
+            var uri = new Uri(origin);
+            if (!isProduction && (uri.Host == "localhost" || uri.Host == "127.0.0.1")) return true;
+            return allowedOrigins.Contains(origin);
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
 });
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // File upload limit (50MB)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 52428800; // 50MB
+    options.MultipartBodyLengthLimit = 52428800;
 });
 
-// Swagger - siempre activo
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -110,10 +118,8 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Middleware pipeline
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-// Swagger siempre activo (no solo en Development)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -123,7 +129,6 @@ app.UseSwaggerUI(c =>
 
 app.UseCors("AllowFrontend");
 
-// Serve static files from wwwroot (for uploaded images)
 app.UseStaticFiles();
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
 if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
@@ -132,7 +137,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Verify DB connection on startup
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -140,7 +144,23 @@ using (var scope = app.Services.CreateScope())
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var canConnect = await db.Database.CanConnectAsync();
         if (canConnect)
+        {
             Log.Information("Database connection successful");
+            // Eliminar constraint restrictivo de MetodoPago si existe (fue añadido manualmente)
+            await db.Database.ExecuteSqlRawAsync(@"
+                IF EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                    WHERE CONSTRAINT_NAME = 'CK_Pedidos_MetodoPago'
+                    AND TABLE_NAME = 'Pedidos'
+                )
+                ALTER TABLE Pedidos DROP CONSTRAINT CK_Pedidos_MetodoPago;
+            ");
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM Notificaciones WHERE Titulo = 'Inicio de sesion';
+            ");
+            await SeedData.SeedAsync(db);
+            Log.Information("Seed data applied");
+        }
         else
             Log.Warning("Cannot connect to database - check connection string");
     }

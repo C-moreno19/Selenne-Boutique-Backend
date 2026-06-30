@@ -37,7 +37,8 @@ public class AuthService : IAuthService
         var usuario = new Usuario {
             NombreCompleto = dto.NombreCompleto, Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena),
-            Telefono = dto.Telefono, RoleID = clienteRole?.RoleID, Estado = "activo"
+            Telefono = dto.Telefono, Documento = dto.Documento,
+            RoleID = clienteRole?.RoleID, Estado = "activo"
         };
         _db.Usuarios.Add(usuario);
         await _db.SaveChangesAsync();
@@ -73,8 +74,6 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         var response = await BuildTokenResponse(usuario, ip);
-
-        _ = Task.Run(() => _notif.CreateAsync(usuario.UsuarioID, "Inicio de sesion", "Nuevo inicio de sesion detectado.", "info"));
 
         return response;
     }
@@ -146,7 +145,10 @@ public class AuthService : IAuthService
             AccessToken = access, RefreshToken = refresh,
             Usuario = new UsuarioTokenDto {
                 UsuarioID = usuario.UsuarioID, NombreCompleto = usuario.NombreCompleto,
-                Email = usuario.Email, Rol = usuario.Rol?.Nombre, Permisos = permisos
+                Email = usuario.Email, Telefono = usuario.Telefono,
+                Direccion = usuario.Direccion, Ciudad = usuario.Ciudad,
+                Documento = usuario.Documento,
+                Rol = usuario.Rol?.Nombre, Permisos = permisos
             }
         });
     }
