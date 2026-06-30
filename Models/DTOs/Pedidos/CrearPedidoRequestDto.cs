@@ -35,6 +35,7 @@ public class CrearPedidoRequestDto
     public string? TipoCuenta { get; set; }
     public string? Notas { get; set; }
     public string? ComprobantePago { get; set; }
+    public string? Estado { get; set; }
 
     public List<PedidoItemDto> Items { get; set; } = new();
 }

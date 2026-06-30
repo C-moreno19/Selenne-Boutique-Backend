@@ -10,13 +10,23 @@ namespace SelenneApi.Services;
 public class JwtService : IJwtService
 {
     private readonly IConfiguration _config;
-    public JwtService(IConfiguration config) { _config = config; }
+    private readonly string _secretKey;
+    private readonly string _issuer;
+    private readonly string _audience;
+
+    public JwtService(IConfiguration config)
+    {
+        _config = config;
+        _secretKey = config["Jwt:SecretKey"] ?? "SuClaveSecretaMuyLargaAquiAlMenos32CaracteresParaJWT!";
+        _issuer = config["Jwt:Issuer"] ?? "SelenneApi";
+        _audience = config["Jwt:Audience"] ?? "SelenneClient";
+    }
 
     public string GenerateAccessToken(Usuario usuario, List<string> permisos)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expiry = DateTime.UtcNow.AddMinutes(int.Parse(_config["Jwt:ExpiryMinutes"] ?? "15"));
+        var expiry = DateTime.UtcNow.AddMinutes(int.Parse(_config["Jwt:ExpiryMinutes"] ?? "480"));
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, usuario.UsuarioID.ToString()),
@@ -26,7 +36,7 @@ public class JwtService : IJwtService
             new("roleName", usuario.Rol?.Nombre ?? "")
         };
         claims.AddRange(permisos.Select(p => new Claim("permission", p)));
-        var token = new JwtSecurityToken(issuer: _config["Jwt:Issuer"], audience: _config["Jwt:Audience"],
+        var token = new JwtSecurityToken(issuer: _issuer, audience: _audience,
             claims: claims, expires: expiry, signingCredentials: creds);
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
@@ -35,15 +45,21 @@ public class JwtService : IJwtService
 
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
-        var tvp = new TokenValidationParameters { ValidateAudience = false, ValidateIssuer = false,
+        var tvp = new TokenValidationParameters
+        {
+            ValidateAudience = false,
+            ValidateIssuer = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!)),
-            ValidateLifetime = false };
-        try {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey)),
+            ValidateLifetime = false
+        };
+        try
+        {
             var principal = new JwtSecurityTokenHandler().ValidateToken(token, tvp, out var sec);
             if (sec is not JwtSecurityToken jwt || !jwt.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)) return null;
             return principal;
-        } catch { return null; }
+        }
+        catch { return null; }
     }
 
     public int? GetUserIdFromToken(string token)
