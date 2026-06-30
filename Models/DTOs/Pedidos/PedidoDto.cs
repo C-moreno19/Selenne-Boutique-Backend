@@ -7,6 +7,7 @@ public class PedidoDto
     public string NombreCliente { get; set; } = string.Empty;
     public string EmailCliente { get; set; } = string.Empty;
     public string TelefonoCliente { get; set; } = string.Empty;
+    public string? DocumentoCliente { get; set; }
     public string DireccionEnvio { get; set; } = string.Empty;
     public string Ciudad { get; set; } = string.Empty;
     public string MetodoPago { get; set; } = string.Empty;
