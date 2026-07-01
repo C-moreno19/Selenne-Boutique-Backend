@@ -150,8 +150,5 @@ public class AppDbContext : DbContext
             .HasForeignKey(sm => sm.UsuarioID)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Trigger on Usuarios table (SQL Server)
-        modelBuilder.Entity<Usuario>()
-            .ToTable(tb => tb.HasTrigger("trg_Usuarios_Auditar"));
     }
 }

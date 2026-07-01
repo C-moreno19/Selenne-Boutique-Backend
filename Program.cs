@@ -19,9 +19,9 @@ builder.Host.UseSerilog();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=localhost\\SQLEXPRESS;Database=SelenneDB;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;";
+    ?? "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres;";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -143,26 +143,13 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var canConnect = await db.Database.CanConnectAsync();
-        if (canConnect)
-        {
-            Log.Information("Database connection successful");
-            // Eliminar constraint restrictivo de MetodoPago si existe (fue añadido manualmente)
-            await db.Database.ExecuteSqlRawAsync(@"
-                IF EXISTS (
-                    SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-                    WHERE CONSTRAINT_NAME = 'CK_Pedidos_MetodoPago'
-                    AND TABLE_NAME = 'Pedidos'
-                )
-                ALTER TABLE Pedidos DROP CONSTRAINT CK_Pedidos_MetodoPago;
-            ");
-            await db.Database.ExecuteSqlRawAsync(@"
-                DELETE FROM Notificaciones WHERE Titulo = 'Inicio de sesion';
-            ");
-            await SeedData.SeedAsync(db);
-            Log.Information("Seed data applied");
-        }
-        else
-            Log.Warning("Cannot connect to database - check connection string");
+        if (!canConnect) { Log.Warning("Cannot connect to database"); return; }
+        Log.Information("Database connection successful");
+        await db.Database.ExecuteSqlRawAsync(@"
+            DELETE FROM ""Notificaciones"" WHERE ""Titulo"" = 'Inicio de sesion';
+        ");
+        await SeedData.SeedAsync(db);
+        Log.Information("Seed data applied");
     }
     catch (Exception ex)
     {
