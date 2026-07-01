@@ -20,7 +20,7 @@ public class Valoracion
     public int Util { get; set; } = 0;
     public int NoUtil { get; set; } = 0;
     public bool VerificadoCompra { get; set; } = false;
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
     [MaxLength(20)]
     public string Estado { get; set; } = "pendiente";

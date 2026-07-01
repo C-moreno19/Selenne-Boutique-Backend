@@ -61,7 +61,7 @@ public class NotificationService : INotificationService
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var n = await context.Notificaciones.FirstOrDefaultAsync(n => n.NotificacionID == notificacionId && n.UsuarioID == usuarioId);
-        if (n != null) { n.Leida = true; n.FechaLeida = DateTime.Now; await context.SaveChangesAsync(); }
+        if (n != null) { n.Leida = true; n.FechaLeida = DateTime.UtcNow; await context.SaveChangesAsync(); }
     }
 
     public async Task MarkAllAsReadAsync(int usuarioId)
@@ -69,7 +69,7 @@ public class NotificationService : INotificationService
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var notifs = await context.Notificaciones.Where(n => n.UsuarioID == usuarioId && !n.Leida).ToListAsync();
-        foreach (var n in notifs) { n.Leida = true; n.FechaLeida = DateTime.Now; }
+        foreach (var n in notifs) { n.Leida = true; n.FechaLeida = DateTime.UtcNow; }
         await context.SaveChangesAsync();
     }
 }

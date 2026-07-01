@@ -36,7 +36,8 @@ public class Usuario
     public string Estado { get; set; } = "activo";
 
     public bool EmailVerificado { get; set; } = false;
-    public DateTime FechaRegistro { get; set; } = DateTime.Now;
+    public bool NotificacionesEmail { get; set; } = true;
+    public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public DateTime? FechaUltimoLogin { get; set; }
 
     [ForeignKey("RoleID")]

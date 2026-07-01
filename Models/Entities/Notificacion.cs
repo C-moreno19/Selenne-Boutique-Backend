@@ -21,7 +21,7 @@ public class Notificacion
     public string Tipo { get; set; } = "info";
 
     public bool Leida { get; set; } = false;
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
     public DateTime? FechaLeida { get; set; }
 
     [MaxLength(100)]

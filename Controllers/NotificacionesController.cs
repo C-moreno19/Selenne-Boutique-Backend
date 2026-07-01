@@ -45,7 +45,7 @@ public class NotificacionesController : ControllerBase
         var n = await _db.Notificaciones.FirstOrDefaultAsync(n => n.NotificacionID == id && n.UsuarioID == userId);
         if (n == null) return NotFound(ApiResponse<object>.Fail("Notificacion no encontrada"));
         n.Leida = true;
-        n.FechaLeida = DateTime.Now;
+        n.FechaLeida = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { }, "Notificacion marcada como leida"));
     }
@@ -56,9 +56,30 @@ public class NotificacionesController : ControllerBase
         var userId = User.GetUserId();
         var notifs = await _db.Notificaciones
             .Where(n => n.UsuarioID == userId && !n.Leida).ToListAsync();
-        foreach (var n in notifs) { n.Leida = true; n.FechaLeida = DateTime.Now; }
+        foreach (var n in notifs) { n.Leida = true; n.FechaLeida = DateTime.UtcNow; }
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { count = notifs.Count }, "Todas marcadas como leidas"));
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<object>>> Eliminar(int id)
+    {
+        var userId = User.GetUserId();
+        var n = await _db.Notificaciones.FirstOrDefaultAsync(n => n.NotificacionID == id && n.UsuarioID == userId);
+        if (n == null) return NotFound(ApiResponse<object>.Fail("Notificacion no encontrada"));
+        _db.Notificaciones.Remove(n);
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { }, "Notificacion eliminada"));
+    }
+
+    [HttpDelete]
+    public async Task<ActionResult<ApiResponse<object>>> EliminarTodas()
+    {
+        var userId = User.GetUserId();
+        var notifs = await _db.Notificaciones.Where(n => n.UsuarioID == userId).ToListAsync();
+        _db.Notificaciones.RemoveRange(notifs);
+        await _db.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { count = notifs.Count }, "Notificaciones eliminadas"));
     }
 }
 

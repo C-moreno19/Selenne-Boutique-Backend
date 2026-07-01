@@ -25,7 +25,7 @@ public class ProductosController : ControllerBase
             .Include(p => p.Imagenes).Include(p => p.StockVariantes).Include(p => p.ProductoTallas).ThenInclude(pt => pt.Talla)
             .Include(p => p.ProductoColores).ThenInclude(pc => pc.Color)
             .Include(p => p.ProductoMateriales).ThenInclude(pm => pm.Material)
-            .Include(p => p.Valoraciones).AsQueryable();
+            .Include(p => p.Valoraciones).AsSplitQuery().AsQueryable();
         query = query.Where(p => p.Estado == (estado ?? "activo"));
         if (categoriaId.HasValue) query = query.Where(p => p.CategoriaPrincipalID == categoriaId);
         if (!string.IsNullOrEmpty(buscar)) query = query.Where(p => p.Nombre.Contains(buscar) || p.Codigo.Contains(buscar));
@@ -40,7 +40,7 @@ public class ProductosController : ControllerBase
             .Include(x => x.Imagenes).Include(x => x.StockVariantes).Include(x => x.ProductoTallas).ThenInclude(pt => pt.Talla)
             .Include(x => x.ProductoColores).ThenInclude(pc => pc.Color)
             .Include(x => x.ProductoMateriales).ThenInclude(pm => pm.Material)
-            .Include(x => x.Valoraciones)
+            .Include(x => x.Valoraciones).AsSplitQuery()
             .FirstOrDefaultAsync(x => x.ProductoID == id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("Producto no encontrado"));
         return Ok(ApiResponse<ProductoDto>.Ok(MapDto(p)));
@@ -90,7 +90,7 @@ public class ProductosController : ControllerBase
         if (dto.Stock.HasValue) p.Stock = dto.Stock.Value;
         if (dto.Estado != null) p.Estado = dto.Estado;
         if (dto.ImagenPrincipal != null) p.ImagenPrincipal = dto.ImagenPrincipal;
-        p.FechaActualizacion = DateTime.Now;
+        p.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(null, "Actualizado"));
     }
@@ -100,11 +100,44 @@ public class ProductosController : ControllerBase
     {
         var uid = User.GetUserId();
         if (!await _perms.HasPermissionAsync(uid, "productos:eliminar")) return Forbid();
+
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
-        _db.Productos.Remove(p);
-        await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
+
+        var bloqueos = new List<string>();
+
+        if (await _db.PedidoDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("pedidos de clientes");
+
+        if (await _db.VentaDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("ventas registradas");
+
+        if (await _db.CompraDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("órdenes de compra");
+
+        if (bloqueos.Count > 0)
+        {
+            var lista = string.Join(", ", bloqueos);
+            return BadRequest(ApiResponse<object>.Fail(
+                $"No se puede eliminar el producto porque tiene historial en: {lista}. " +
+                "Desactívelo en lugar de eliminarlo."));
+        }
+
+        try
+        {
+            var carritoItems = _db.Carrito.Where(c => c.ProductoID == id);
+            _db.Carrito.RemoveRange(carritoItems);
+            _db.Favoritos.RemoveRange(_db.Favoritos.Where(x => x.ProductoID == id));
+            _db.Productos.Remove(p);
+            await _db.SaveChangesAsync();
+            return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
+        }
+        catch (DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            return BadRequest(ApiResponse<object>.Fail(
+                $"No se puede eliminar el producto porque tiene registros asociados en la base de datos. Detalle: {inner}"));
+        }
     }
 
 
@@ -161,7 +194,7 @@ public class ProductosController : ControllerBase
     }
 
     // POST /api/productos/{id}/variantes — Stock por talla+color
-    [HttpPost("{id}/variantes")]
+    [HttpPost("{id}/variantes"), Authorize]
     public async Task<IActionResult> SetVariantes(int id, [FromBody] SetVariantesDto dto)
     {
         var p = await _db.Productos
@@ -221,7 +254,7 @@ public class ProductosController : ControllerBase
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
         p.PrecioOferta = Math.Round(p.PrecioVenta * (1 - dto.PorcentajeDescuento / 100), 2);
-        p.FechaActualizacion = DateTime.Now;
+        p.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { p.PrecioOferta }, "Descuento aplicado"));
     }

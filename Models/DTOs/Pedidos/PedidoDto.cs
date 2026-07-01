@@ -7,6 +7,7 @@ public class PedidoDto
     public string NombreCliente { get; set; } = string.Empty;
     public string EmailCliente { get; set; } = string.Empty;
     public string TelefonoCliente { get; set; } = string.Empty;
+    public string? DocumentoCliente { get; set; }
     public string DireccionEnvio { get; set; } = string.Empty;
     public string Ciudad { get; set; } = string.Empty;
     public string MetodoPago { get; set; } = string.Empty;
@@ -17,6 +18,7 @@ public class PedidoDto
     public string Estado { get; set; } = string.Empty;
     public string? NumeroGuia { get; set; }
     public string? Transportadora { get; set; }
+    public string? ComprobantePago { get; set; }
     public DateTime FechaPedido { get; set; }
     public DateTime? FechaEnvio { get; set; }
     public DateTime? FechaEntrega { get; set; }

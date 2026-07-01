@@ -45,9 +45,6 @@ public class CarritoController : ControllerBase
     [HttpPost("items")]
     public async Task<ActionResult<ApiResponse<CarritoItemDto>>> AddItem([FromBody] AgregarCarritoDto dto)
     {
-        if (!PermissionHelper.HasPermission(User, "tienda:carrito"))
-            return Forbid();
-
         var userId = User.GetUserId();
         var producto = await _db.Productos.FindAsync(dto.ProductoID);
         if (producto == null) return NotFound(ApiResponse<object>.Fail("Producto no encontrado"));
@@ -71,7 +68,7 @@ public class CarritoController : ControllerBase
                 Cantidad = dto.Cantidad,
                 TallaSeleccionada = dto.TallaSeleccionada,
                 ColorSeleccionado = dto.ColorSeleccionado,
-                FechaAgregado = DateTime.Now
+                FechaAgregado = DateTime.UtcNow
             };
             _db.Carrito.Add(item);
             await _db.SaveChangesAsync();
