@@ -1,6 +1,5 @@
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using System.Text;
+using System.Text.Json;
 
 namespace SelenneApi.Services;
 
@@ -8,11 +7,11 @@ public class SmtpEmailService : IEmailService
 {
     private readonly IConfiguration _config;
     private readonly ILogger<SmtpEmailService> _logger;
+    private static readonly HttpClient _http = new();
 
     public SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> logger)
     { _config = config; _logger = logger; }
 
-    // Genera un código de referencia que no expone el volumen de ventas al cliente
     private static string Ref(int pedidoId) => $"SLN-{pedidoId + 10000}";
 
     private async Task SendAsync(string to, string subject, string body,
@@ -20,45 +19,54 @@ public class SmtpEmailService : IEmailService
     {
         try
         {
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                _config["Email:FromName"] ?? "Selenne Boutique",
-                _config["Email:FromEmail"] ?? "noreply@selenne.com"
-            ));
-            message.To.Add(MailboxAddress.Parse(to));
-            message.Subject = subject;
+            var apiKey = _config["Email:BrevoApiKey"] ?? "";
+            var fromEmail = _config["Email:FromEmail"] ?? "noreply@selenne.com";
+            var fromName = _config["Email:FromName"] ?? "Selenne Boutique";
 
+            object payload;
             if (inlineImageBytes != null && inlineImageBytes.Length > 0)
             {
-                var builder = new MimeKit.BodyBuilder();
-                builder.HtmlBody = body;
-                var parts = inlineImageMime?.Split('/');
-                var img = builder.LinkedResources.Add(
-                    "image.jpg", inlineImageBytes,
-                    new MimeKit.ContentType(parts?[0] ?? "image", parts?[1] ?? "jpeg"));
-                img.ContentId = inlineCid;
-                img.ContentDisposition = new MimeKit.ContentDisposition(MimeKit.ContentDisposition.Inline);
-                message.Body = builder.ToMessageBody();
+                payload = new
+                {
+                    sender = new { name = fromName, email = fromEmail },
+                    to = new[] { new { email = to } },
+                    subject,
+                    htmlContent = body,
+                    attachment = new[]
+                    {
+                        new
+                        {
+                            content = Convert.ToBase64String(inlineImageBytes),
+                            name = "image.jpg",
+                            contentType = inlineImageMime ?? "image/jpeg",
+                            contentId = inlineCid
+                        }
+                    }
+                };
             }
             else
             {
-                message.Body = new TextPart("html") { Text = body };
+                payload = new
+                {
+                    sender = new { name = fromName, email = fromEmail },
+                    to = new[] { new { email = to } },
+                    subject,
+                    htmlContent = body
+                };
             }
 
-            using var client = new SmtpClient();
-            await client.ConnectAsync(
-                _config["Email:SmtpHost"] ?? "smtp.gmail.com",
-                int.Parse(_config["Email:SmtpPort"] ?? "587"),
-                SecureSocketOptions.StartTls
-            );
-            await client.AuthenticateAsync(
-                _config["Email:SmtpUsername"],
-                _config["Email:SmtpPassword"]
-            );
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+            request.Headers.Add("api-key", apiKey);
+            request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Email enviado a {To}: {Subject}", to, subject);
+            var response = await _http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+                _logger.LogInformation("Email enviado a {To}: {Subject}", to, subject);
+            else
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Email Brevo {Status} al enviar a {To}: {Err}", (int)response.StatusCode, to, err);
+            }
         }
         catch (Exception ex)
         {
@@ -66,18 +74,14 @@ public class SmtpEmailService : IEmailService
         }
     }
 
-    // Layout base: encabezado rosado + contenido blanco + pie de página
     private string Card(string content) =>
         "<html><body style='margin:0;padding:0;background:#fdf2f8;font-family:Arial,Helvetica,sans-serif'>" +
         "<table width='100%' cellpadding='0' cellspacing='0' style='padding:28px 16px'><tr><td>" +
         "<table width='100%' cellpadding='0' cellspacing='0' style='max-width:500px;margin:0 auto;background:#ffffff;box-shadow:0 2px 12px rgba(214,83,145,.08)'>" +
-        // Header rosado
         "<tr><td style='background:#d65391;padding:24px 36px'>" +
         "<p style='margin:0;font-size:13px;font-weight:700;color:#fff;letter-spacing:3px;text-transform:uppercase'>Selenne Boutique</p>" +
         "</td></tr>" +
-        // Contenido
         "<tr><td style='padding:28px 36px 24px'>" + content + "</td></tr>" +
-        // Pie
         "<tr><td style='background:#fdf2f8;padding:14px 36px;text-align:center;border-top:1px solid #fce7f3'>" +
         "<p style='margin:0;font-size:11px;color:#c084a5;letter-spacing:1px'>© Selenne Boutique — Moda con estilo</p>" +
         "</td></tr></table></td></tr></table></body></html>";
@@ -167,7 +171,6 @@ public class SmtpEmailService : IEmailService
         var waText = Uri.EscapeDataString($"Hola, adjunto el comprobante de pago de mi pedido por ${total:N0}");
         var waUrl = $"https://wa.me/{whatsapp}?text={waText}";
 
-        // Usar el mismo QR estático del checkout si existe
         var qrPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "qr-transferencia.png");
         byte[]? qrBytes = System.IO.File.Exists(qrPath) ? await System.IO.File.ReadAllBytesAsync(qrPath) : null;
         var qrImg = qrBytes != null
