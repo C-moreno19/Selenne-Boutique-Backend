@@ -16,6 +16,7 @@ begin
 EXEC [SelenneDB].[dbo].[sp_fulltext_database] @action = 'enable'
 end
 GO
+
 ALTER DATABASE [SelenneDB] SET ANSI_NULL_DEFAULT OFF 
 GO
 ALTER DATABASE [SelenneDB] SET ANSI_NULLS OFF 
