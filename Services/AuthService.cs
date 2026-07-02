@@ -30,7 +30,7 @@ public class AuthService : IAuthService
 
     public async Task<ApiResponse<TokenResponseDto>> SignupAsync(SignupRequestDto dto, string? ip)
     {
-        if (await _db.Usuarios.AnyAsync(u => u.Email == dto.Email))
+        if (await _db.Usuarios.AnyAsync(u => u.Email == dto.Email && u.Estado != "eliminado"))
             return ApiResponse<TokenResponseDto>.Fail("El email ya esta registrado");
 
         var clienteRole = await _db.Roles.FirstOrDefaultAsync(r => r.Nombre == "Cliente");
