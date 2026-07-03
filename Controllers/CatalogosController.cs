@@ -431,7 +431,7 @@ public class ProveedoresController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
-        var items = await _db.Proveedores.Where(p => p.Estado == "activo").OrderBy(p => p.Nombre).ToListAsync();
+        var items = await _db.Proveedores.OrderBy(p => p.Nombre).ToListAsync();
         return Ok(ApiResponse<object>.Ok(items));
     }
 
