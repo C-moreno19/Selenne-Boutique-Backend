@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SelenneApi.Models.DTOs;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Webp;
+using SelenneApi.Services;
 
 namespace SelenneApi.Controllers;
 
@@ -11,12 +9,12 @@ namespace SelenneApi.Controllers;
 [Route("api/upload")]
 public class UploadController : ControllerBase
 {
-    private readonly IWebHostEnvironment _env;
+    private readonly ICloudinaryService _cloudinaryService;
     private readonly ILogger<UploadController> _logger;
 
-    public UploadController(IWebHostEnvironment env, ILogger<UploadController> logger)
+    public UploadController(ICloudinaryService cloudinaryService, ILogger<UploadController> logger)
     {
-        _env = env;
+        _cloudinaryService = cloudinaryService;
         _logger = logger;
     }
 
@@ -35,31 +33,10 @@ public class UploadController : ControllerBase
         if (file.Length > 5 * 1024 * 1024)
             return BadRequest(ApiResponse<object>.Fail("La imagen no puede superar 5MB"));
 
-        // Crear carpeta si no existe
-        var uploadsFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads");
-        if (!Directory.Exists(uploadsFolder))
-            Directory.CreateDirectory(uploadsFolder);
-
-        // Guardar como WebP optimizado
-        var fileName = $"{Guid.NewGuid()}.webp";
-        var filePath = Path.Combine(uploadsFolder, fileName);
-
         using var inputStream = file.OpenReadStream();
-        using var image = await Image.LoadAsync(inputStream);
+        var fileUrl = await _cloudinaryService.SubirImagenAsync(inputStream, file.FileName);
 
-        // Redimensionar si supera 1200px de ancho manteniendo proporción
-        if (image.Width > 1200)
-            image.Mutate(x => x.Resize(1200, 0));
-
-        var encoder = new WebpEncoder { Quality = 82 };
-        await image.SaveAsync(filePath, encoder);
-
-        // URL pública del archivo
-        var request = HttpContext.Request;
-        var baseUrl = $"{request.Scheme}://{request.Host}";
-        var fileUrl = $"{baseUrl}/uploads/{fileName}";
-
-        _logger.LogInformation("Imagen subida: {FileName} → {Url}", fileName, fileUrl);
+        _logger.LogInformation("Imagen subida a Cloudinary: {Url}", fileUrl);
 
         return Ok(ApiResponse<object>.Ok(new { url = fileUrl }, "Imagen subida correctamente"));
     }
