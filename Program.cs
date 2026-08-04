@@ -33,7 +33,7 @@ builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:SecretKey"]
-    ?? "***REMOVED***";
+    ?? throw new InvalidOperationException("Falta configurar Jwt:SecretKey (variable de entorno Jwt__SecretKey)");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

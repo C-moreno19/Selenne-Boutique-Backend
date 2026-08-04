@@ -17,7 +17,8 @@ public class JwtService : IJwtService
     public JwtService(IConfiguration config)
     {
         _config = config;
-        _secretKey = config["Jwt:SecretKey"] ?? "***REMOVED***";
+        _secretKey = config["Jwt:SecretKey"]
+            ?? throw new InvalidOperationException("Falta configurar Jwt:SecretKey (variable de entorno Jwt__SecretKey)");
         _issuer = config["Jwt:Issuer"] ?? "SelenneApi";
         _audience = config["Jwt:Audience"] ?? "SelenneClient";
     }
