@@ -17,4 +17,11 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Render inyecta la variable PORT (por defecto 10000).
 # El CMD en forma de shell permite leer $PORT en tiempo de ejecución.
-CMD dotnet SelenneApi.dll --urls "http://+:${PORT:-8080}"
+# --hostBuilder:reloadConfigOnChange=false: sin esto, .NET registra un
+# FileSystemWatcher (inotify) para poder recargar appsettings.json en caliente.
+# No hace falta en produccion (cada deploy ya reinicia el proceso entero) y en
+# el contenedor de Render, si el proceso reinicia varias veces seguidas, los
+# watchers de intentos anteriores no se liberan a tiempo y se choca contra el
+# limite de inotify del SO (128), lo que aborta el proceso antes de que llegue
+# a levantar el servidor.
+CMD dotnet SelenneApi.dll --urls "http://+:${PORT:-8080}" --hostBuilder:reloadConfigOnChange=false

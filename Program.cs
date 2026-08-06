@@ -144,13 +144,22 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var canConnect = await db.Database.CanConnectAsync();
-        if (!canConnect) { Log.Warning("Cannot connect to database"); return; }
-        Log.Information("Database connection successful");
-        await db.Database.ExecuteSqlRawAsync(@"
-            DELETE FROM ""Notificaciones"" WHERE ""Titulo"" = 'Inicio de sesion';
-        ");
-        await SeedData.SeedAsync(db);
-        Log.Information("Seed data applied");
+        if (!canConnect)
+        {
+            // No cortar el arranque: la app sigue sirviendo (EF Core reintenta la
+            // conexion por su cuenta en cada query). Antes esto hacia `return`, lo
+            // que terminaba el proceso entero sin siquiera llegar a app.Run().
+            Log.Warning("Cannot connect to database — starting anyway, skipping seed");
+        }
+        else
+        {
+            Log.Information("Database connection successful");
+            await db.Database.ExecuteSqlRawAsync(@"
+                DELETE FROM ""Notificaciones"" WHERE ""Titulo"" = 'Inicio de sesion';
+            ");
+            await SeedData.SeedAsync(db);
+            Log.Information("Seed data applied");
+        }
     }
     catch (Exception ex)
     {
