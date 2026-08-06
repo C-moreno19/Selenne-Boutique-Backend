@@ -12,6 +12,10 @@ public class UsuarioTokenDto
     public int UsuarioID { get; set; }
     public string NombreCompleto { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? Telefono { get; set; }
+    public string? Direccion { get; set; }
+    public string? Ciudad { get; set; }
+    public string? Documento { get; set; }
     public string? Rol { get; set; }
     public List<string> Permisos { get; set; } = new();
 }

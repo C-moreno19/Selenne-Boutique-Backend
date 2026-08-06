@@ -25,7 +25,7 @@ public class ProductosController : ControllerBase
             .Include(p => p.Imagenes).Include(p => p.StockVariantes).Include(p => p.ProductoTallas).ThenInclude(pt => pt.Talla)
             .Include(p => p.ProductoColores).ThenInclude(pc => pc.Color)
             .Include(p => p.ProductoMateriales).ThenInclude(pm => pm.Material)
-            .Include(p => p.Valoraciones).AsQueryable();
+            .Include(p => p.Valoraciones).AsSplitQuery().AsQueryable();
         query = query.Where(p => p.Estado == (estado ?? "activo"));
         if (categoriaId.HasValue) query = query.Where(p => p.CategoriaPrincipalID == categoriaId);
         if (!string.IsNullOrEmpty(buscar)) query = query.Where(p => p.Nombre.Contains(buscar) || p.Codigo.Contains(buscar));
@@ -40,7 +40,7 @@ public class ProductosController : ControllerBase
             .Include(x => x.Imagenes).Include(x => x.StockVariantes).Include(x => x.ProductoTallas).ThenInclude(pt => pt.Talla)
             .Include(x => x.ProductoColores).ThenInclude(pc => pc.Color)
             .Include(x => x.ProductoMateriales).ThenInclude(pm => pm.Material)
-            .Include(x => x.Valoraciones)
+            .Include(x => x.Valoraciones).AsSplitQuery()
             .FirstOrDefaultAsync(x => x.ProductoID == id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("Producto no encontrado"));
         return Ok(ApiResponse<ProductoDto>.Ok(MapDto(p)));
@@ -100,26 +100,44 @@ public class ProductosController : ControllerBase
     {
         var uid = User.GetUserId();
         if (!await _perms.HasPermissionAsync(uid, "productos:eliminar")) return Forbid();
+
         var p = await _db.Productos.FindAsync(id);
         if (p == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
 
-        // Limpiar todas las referencias antes de borrar
-        _db.ProductoImagenes.RemoveRange(await _db.ProductoImagenes.Where(x => x.ProductoID == id).ToListAsync());
-        _db.ProductoTallas.RemoveRange(await _db.ProductoTallas.Where(x => x.ProductoID == id).ToListAsync());
-        _db.ProductoColores.RemoveRange(await _db.ProductoColores.Where(x => x.ProductoID == id).ToListAsync());
-        _db.ProductoMateriales.RemoveRange(await _db.ProductoMateriales.Where(x => x.ProductoID == id).ToListAsync());
-        _db.ProductoStockVariantes.RemoveRange(await _db.ProductoStockVariantes.Where(x => x.ProductoID == id).ToListAsync());
-        _db.Carrito.RemoveRange(await _db.Carrito.Where(x => x.ProductoID == id).ToListAsync());
-        _db.Favoritos.RemoveRange(await _db.Favoritos.Where(x => x.ProductoID == id).ToListAsync());
-        _db.Valoraciones.RemoveRange(await _db.Valoraciones.Where(x => x.ProductoID == id).ToListAsync());
-        _db.PedidoDetalles.RemoveRange(await _db.PedidoDetalles.Where(x => x.ProductoID == id).ToListAsync());
-        _db.CompraDetalles.RemoveRange(await _db.CompraDetalles.Where(x => x.ProductoID == id).ToListAsync());
-        _db.StockMovimientos.RemoveRange(await _db.StockMovimientos.Where(x => x.ProductoID == id).ToListAsync());
+        var bloqueos = new List<string>();
 
-        _db.Productos.Remove(p);
+        if (await _db.PedidoDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("pedidos de clientes");
 
-        await _db.SaveChangesAsync();
-        return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
+        if (await _db.VentaDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("ventas registradas");
+
+        if (await _db.CompraDetalles.AnyAsync(d => d.ProductoID == id))
+            bloqueos.Add("órdenes de compra");
+
+        if (bloqueos.Count > 0)
+        {
+            var lista = string.Join(", ", bloqueos);
+            return BadRequest(ApiResponse<object>.Fail(
+                $"No se puede eliminar el producto porque tiene historial en: {lista}. " +
+                "Desactívelo en lugar de eliminarlo."));
+        }
+
+        try
+        {
+            var carritoItems = _db.Carrito.Where(c => c.ProductoID == id);
+            _db.Carrito.RemoveRange(carritoItems);
+            _db.Favoritos.RemoveRange(_db.Favoritos.Where(x => x.ProductoID == id));
+            _db.Productos.Remove(p);
+            await _db.SaveChangesAsync();
+            return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
+        }
+        catch (DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            return BadRequest(ApiResponse<object>.Fail(
+                $"No se puede eliminar el producto porque tiene registros asociados en la base de datos. Detalle: {inner}"));
+        }
     }
 
 

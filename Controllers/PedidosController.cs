@@ -27,21 +27,30 @@ public class PedidosController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<List<PedidoDto>>>> GetAll()
     {
-        var userId = User.GetUserId();
-        var hasVer = PermissionHelper.HasPermission(User, "ventas:ver");
-
-        IQueryable<Pedido> query = _db.Pedidos
+        var items = await _db.Pedidos
             .Include(p => p.Detalles).ThenInclude(d => d.Producto)
             .Include(p => p.Detalles).ThenInclude(d => d.Talla)
-            .Include(p => p.Detalles).ThenInclude(d => d.Color);
+            .Include(p => p.Detalles).ThenInclude(d => d.Color)
+            .OrderByDescending(p => p.FechaPedido)
+            .ToListAsync();
+        return Ok(ApiResponse<List<PedidoDto>>.Ok(items.Select(MapToDto).ToList()));
+    }
 
-        if (!hasVer)
-            query = query.Where(p => p.ClienteID == userId);
-
-        var pedidos = await query.OrderByDescending(p => p.FechaPedido).ToListAsync();
-        return Ok(ApiResponse<List<PedidoDto>>.Ok(pedidos.Select(MapToDto).ToList()));
+    [HttpGet("mis-pedidos")]
+    public async Task<ActionResult<ApiResponse<List<PedidoDto>>>> GetMisPedidos()
+    {
+        var userId = User.GetUserId();
+        var items = await _db.Pedidos
+            .Include(p => p.Detalles).ThenInclude(d => d.Producto)
+            .Include(p => p.Detalles).ThenInclude(d => d.Talla)
+            .Include(p => p.Detalles).ThenInclude(d => d.Color)
+            .Where(p => p.ClienteID == userId)
+            .OrderByDescending(p => p.FechaPedido)
+            .ToListAsync();
+        return Ok(ApiResponse<List<PedidoDto>>.Ok(items.Select(MapToDto).ToList()));
     }
 
     [HttpGet("{id}")]
@@ -64,6 +73,7 @@ public class PedidosController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] CrearPedidoRequestDto dto)
     {
         var userId = User.GetUserId();
@@ -103,7 +113,8 @@ public class PedidosController : ControllerBase
                 Total = subtotalManual,
                 Estado = "Aprobado",
                 FechaPedido = DateTime.UtcNow,
-                FechaActualizacion = DateTime.UtcNow
+                FechaActualizacion = DateTime.UtcNow,
+                ConfirmacionToken = Guid.NewGuid().ToString("N")
             };
 
             using var txManual = await _db.Database.BeginTransactionAsync();
@@ -159,18 +170,14 @@ public class PedidosController : ControllerBase
                 ApiResponse<object>.Ok(new { pedidoId = pedidoManual.PedidoID, total = pedidoManual.Total }, "Venta registrada"));
         }
 
-        // Checkout de cliente
-        if (!PermissionHelper.HasPermission(User, "tienda:comprar"))
-            return Forbid();
-
+        // Checkout de cliente — cualquier usuario autenticado puede comprar
         var usuario = await _db.Usuarios.FindAsync(userId);
-        if (usuario == null) return Unauthorized();
+        if (usuario == null) return Unauthorized(ApiResponse<object>.Fail("Debes iniciar sesión para realizar un pedido"));
 
         var nombreC = !string.IsNullOrWhiteSpace(dto.NombreCliente) ? dto.NombreCliente : usuario.NombreCompleto;
         var emailC  = !string.IsNullOrWhiteSpace(dto.EmailCliente)  ? dto.EmailCliente  : usuario.Email;
         var telC    = !string.IsNullOrWhiteSpace(dto.TelefonoCliente) ? dto.TelefonoCliente : (usuario.Telefono ?? "");
 
-        // Preferir Items enviados en el request; usar carrito DB como fallback
         var itemsCheckout = new List<(int ProdID, Producto Prod, int Cant, int? TallaID, int? ColorID)>();
         List<Carrito>? dbCart = null;
 
@@ -218,7 +225,8 @@ public class PedidosController : ControllerBase
             Notas = dto.Notas,
             ComprobantePago = dto.ComprobantePago,
             FechaPedido = DateTime.UtcNow,
-            FechaActualizacion = DateTime.UtcNow
+            FechaActualizacion = DateTime.UtcNow,
+            ConfirmacionToken = Guid.NewGuid().ToString("N")
         };
 
         using var transaction = await _db.Database.BeginTransactionAsync();
@@ -271,7 +279,7 @@ public class PedidosController : ControllerBase
         }
 
         await _notif.CreateAsync(userId, "Pedido creado",
-            $"Tu pedido #{pedido.PedidoID} por ${subtotal:F2} ha sido recibido.", "success", $"pedido:{pedido.PedidoID}");
+            $"Tu pedido por ${subtotal:N0} ha sido recibido y está siendo procesado.", "success", $"pedido:{pedido.PedidoID}");
 
         _ = _email.SendOrderConfirmationClienteAsync(emailC, nombreC, pedido.PedidoID, subtotal);
         var adminEmail = _config["Email:FromEmail"];
@@ -283,11 +291,9 @@ public class PedidosController : ControllerBase
     }
 
     [HttpPut("{id}/estado")]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> UpdateEstado(int id, [FromBody] ActualizarEstadoPedidoDto dto)
     {
-        if (!PermissionHelper.HasPermission(User, "ventas:editar"))
-            return Forbid();
-
         var pedido = await _db.Pedidos.Include(p => p.Cliente).FirstOrDefaultAsync(p => p.PedidoID == id);
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
 
@@ -295,7 +301,6 @@ public class PedidosController : ControllerBase
         if (!estadosValidos.Contains(dto.NuevoEstado))
             return BadRequest(ApiResponse<object>.Fail("Estado invalido"));
 
-        // Restaurar stock si se cancela o rechaza un pedido que ya tenía stock descontado
         var estadosQueDescontanStock = new[] { "Aprobado", "Aprobada", "En proceso", "Enviado", "Entregado", "Completado", "Completada" };
         var estadosCancelacion = new[] { "Cancelado", "Rechazado", "Rechazada" };
         if (estadosCancelacion.Contains(dto.NuevoEstado) && estadosQueDescontanStock.Contains(pedido.Estado))
@@ -317,70 +322,177 @@ public class PedidosController : ControllerBase
         pedido.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        await _notif.CreateAsync(pedido.ClienteID, "Pedido actualizado",
-            $"Tu pedido #{id} ahora esta: {dto.NuevoEstado}", "info", $"pedido:{id}");
+        if (dto.NuevoEstado == "Aprobado" && !string.IsNullOrEmpty(pedido.EmailCliente))
+        {
+            var cliente = pedido.ClienteID > 0 ? await _db.Usuarios.FindAsync(pedido.ClienteID) : null;
+            if (cliente == null || cliente.NotificacionesEmail)
+                _ = _email.SendOrderApprovedAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, pedido.Total);
+        }
 
-        _ = _email.SendOrderStatusUpdateAsync(pedido.EmailCliente, pedido.NombreCliente, id, dto.NuevoEstado);
+        var cid = pedido.ClienteID;
+        if (cid > 0)
+        {
+            (string titulo, string mensaje, string tipo) notif = dto.NuevoEstado switch
+            {
+                "Aprobado"   => ("✅ Pedido aprobado",   "Tu pedido fue aprobado y será enviado en las próximas 72 horas.", "success"),
+                "Rechazado"  => ("❌ Pedido rechazado",  "Tu pedido fue rechazado." + (string.IsNullOrEmpty(dto.Notas) ? "" : $" Motivo: {dto.Notas}"), "error"),
+                "Completado" => ("🎉 Pedido completado", "Tu pedido fue completado. ¡Gracias por tu compra!", "success"),
+                "Cancelado"  => ("Pedido cancelado",     "Tu pedido fue cancelado.", "warning"),
+                _ => ("", "", "")
+            };
+            if (!string.IsNullOrEmpty(notif.titulo))
+                _ = _notif.CreateAsync(cid, notif.titulo, notif.mensaje, notif.tipo, $"pedido-{pedido.PedidoID}");
+        }
+
+        _ = _email.SendOrderStatusUpdateAsync(pedido.EmailCliente, pedido.NombreCliente, id, dto.NuevoEstado, dto.Notas);
         return Ok(ApiResponse<object>.Ok(new { estado = dto.NuevoEstado }, "Estado actualizado"));
     }
 
+    [HttpGet("confirmar/{token}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmarEntrega(string token)
+    {
+        string PageHtml(string titulo, string tituloColor, string icono, string mensaje, string subMensaje = "") =>
+            "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Selenne Boutique</title>" +
+            "<style>" +
+            "*{margin:0;padding:0;box-sizing:border-box}" +
+            "body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:linear-gradient(145deg,#fce7f3 0%,#fff0f7 50%,#fdf2f8 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}" +
+            ".card{background:white;border-radius:24px;box-shadow:0 24px 64px rgba(214,83,145,.18);max-width:460px;width:100%;overflow:hidden;text-align:center}" +
+            ".header{background:linear-gradient(135deg,#c94f87 0%,#d65391 50%,#e8709f 100%);padding:36px 32px 32px;position:relative}" +
+            ".header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:rgba(255,255,255,.15)}" +
+            ".brand-tag{color:rgba(255,255,255,.6);font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}" +
+            ".header h1{color:white;font-size:24px;font-weight:700;letter-spacing:.5px}" +
+            ".header p{color:rgba(255,255,255,.75);font-size:13px;margin-top:5px;font-weight:400}" +
+            ".body{padding:44px 36px 36px}" +
+            ".icon-wrap{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#fce7f3,#fdf2f8);border:2px solid #fce7f3;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:40px}" +
+            ".titulo{font-size:20px;font-weight:700;color:" + tituloColor + ";margin-bottom:14px;letter-spacing:-.3px}" +
+            ".mensaje{color:#374151;font-size:15px;line-height:1.65;margin-bottom:4px}" +
+            ".sub{color:#9ca3af;font-size:13px;margin-top:16px;line-height:1.5}" +
+            ".divider{width:40px;height:3px;background:linear-gradient(90deg,#d65391,#f8a9c5);border-radius:2px;margin:24px auto 0}" +
+            ".footer{background:#fdf2f8;padding:18px 32px;border-top:1px solid #fce7f3;display:flex;align-items:center;justify-content:center;gap:8px}" +
+            ".footer-dot{width:4px;height:4px;border-radius:50%;background:#f9a8d4}" +
+            ".footer p{color:#d65391;font-size:12px;font-weight:600;letter-spacing:.5px}" +
+            "</style></head>" +
+            "<body><div class='card'>" +
+            "<div class='header'><p class='brand-tag'>Selenne Boutique</p><h1>Selenne Boutique</h1><p>Moda con estilo</p></div>" +
+            "<div class='body'><div class='icon-wrap'>" + icono + "</div>" +
+            "<p class='titulo'>" + titulo + "</p><p class='mensaje'>" + mensaje + "</p>" +
+            (subMensaje != "" ? "<p class='sub'>" + subMensaje + "</p>" : "") +
+            "<div class='divider'></div></div>" +
+            "<div class='footer'><div class='footer-dot'></div><p>selenneboutique.com</p><div class='footer-dot'></div></div>" +
+            "</div></body></html>";
+
+        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.ConfirmacionToken == token);
+        if (pedido == null)
+            return Content(PageHtml("Enlace no válido", "#dc2626", "❌", "Este enlace es inválido o ya fue utilizado anteriormente.", "Si crees que es un error, contacta a Selenne Boutique."), "text/html; charset=utf-8");
+
+        if (pedido.Estado == "Completado")
+            return Content(PageHtml("Pedido ya confirmado", "#d65391", "✅", "Tu pedido ya fue marcado como completado. ¡Gracias por tu compra!", "Esperamos verte pronto de nuevo."), "text/html; charset=utf-8");
+
+        pedido.Estado = "Completado";
+        pedido.FechaEntrega = DateTime.UtcNow;
+        pedido.FechaActualizacion = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Content(PageHtml("¡Recepción confirmada!", "#d65391", "🎉", "Gracias <strong>" + pedido.NombreCliente + "</strong>, tu pedido ha sido marcado como completado.", "¡Esperamos que disfrutes tu compra. Vuelve pronto!"), "text/html; charset=utf-8");
+    }
+
     [HttpPost("{id}/email-pago")]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> EnviarEmailPago(int id, [FromBody] EnviarEmailPagoDto dto)
     {
-        if (!PermissionHelper.HasPermission(User, "pedidos:editar"))
-            return Forbid();
-
-        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.PedidoID == id);
+        var pedido = await _db.Pedidos.FindAsync(id);
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
+        if (string.IsNullOrEmpty(pedido.EmailCliente)) return BadRequest(ApiResponse<object>.Fail("El pedido no tiene email"));
 
-        var banco = _config["BankAccount:Banco"] ?? "";
-        var cuenta = _config["BankAccount:NumeroCuenta"] ?? "";
-        var titular = _config["BankAccount:Titular"] ?? "";
-        var tipoCuenta = _config["BankAccount:TipoCuenta"] ?? "";
+        var banco = _config["BankAccount:Banco"] ?? "Banco XYZ";
+        var cuenta = _config["BankAccount:NumeroCuenta"] ?? "1234567890";
+        var titular = _config["BankAccount:Titular"] ?? "Selenne Boutique";
+        var tipoCuenta = _config["BankAccount:TipoCuenta"] ?? "Ahorros";
+        _ = _email.SendPendingPaymentEmailAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, pedido.Total, dto.Mensaje ?? "", banco, cuenta, titular, tipoCuenta);
 
-        _ = _email.SendPaymentInfoEmailAsync(
-            pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, pedido.Total,
-            banco, cuenta, titular, tipoCuenta, dto.Mensaje);
+        if (pedido.ClienteID > 0)
+            _ = _notif.CreateAsync(pedido.ClienteID, "💳 Información de pago",
+                $"Te enviamos los datos bancarios para completar el pago de tu pedido #{id}. Revisa tu correo.", "warning", $"pedido-{id}");
 
         return Ok(ApiResponse<object>.Ok(new { }, "Correo de pago enviado"));
     }
 
     [HttpPost("{id}/email-guia")]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> EnviarEmailGuia(int id, [FromForm] EnviarEmailGuiaDto dto)
     {
-        if (!PermissionHelper.HasPermission(User, "pedidos:editar"))
-            return Forbid();
-
-        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.PedidoID == id);
+        var pedido = await _db.Pedidos.FindAsync(id);
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
+        if (string.IsNullOrEmpty(pedido.EmailCliente)) return BadRequest(ApiResponse<object>.Fail("El pedido no tiene email"));
 
-        string? fotoUrl = null;
+        byte[]? fotoBytes = null;
+        string? fotoMimeType = null;
         if (dto.Foto != null && dto.Foto.Length > 0)
         {
-            var uploadsPath = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads");
-            Directory.CreateDirectory(uploadsPath);
-            var fileName = $"guia_{Guid.NewGuid()}{Path.GetExtension(dto.Foto.FileName)}";
-            var filePath = Path.Combine(uploadsPath, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await dto.Foto.CopyToAsync(stream);
-            var baseUrl = _config["AppSettings:BaseUrl"]?.TrimEnd('/') ?? "";
-            fotoUrl = string.IsNullOrEmpty(baseUrl) ? $"/uploads/{fileName}" : $"{baseUrl}/uploads/{fileName}";
+            using var ms = new MemoryStream();
+            await dto.Foto.CopyToAsync(ms);
+            fotoBytes = ms.ToArray();
+            fotoMimeType = dto.Foto.ContentType ?? "image/jpeg";
+
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+            var ext = Path.GetExtension(dto.Foto.FileName);
+            var fileName = $"guia_{id}_{Guid.NewGuid():N}{ext}";
+            await System.IO.File.WriteAllBytesAsync(Path.Combine(uploadsPath, fileName), fotoBytes);
         }
 
-        if (!string.IsNullOrEmpty(dto.NumeroGuia)) pedido.NumeroGuia = dto.NumeroGuia;
-        if (!string.IsNullOrEmpty(dto.Transportadora)) pedido.Transportadora = dto.Transportadora;
+        pedido.NumeroGuia = dto.NumeroGuia;
+        pedido.Transportadora = dto.Transportadora;
+        pedido.FechaActualizacion = DateTime.UtcNow;
+
         var estadosTerminales = new[] { "Entregado", "Cancelado", "Rechazado", "Rechazada", "Completado", "Completada" };
         if (!estadosTerminales.Contains(pedido.Estado))
         {
             pedido.Estado = "Enviado";
             pedido.FechaEnvio = DateTime.UtcNow;
-            pedido.FechaActualizacion = DateTime.UtcNow;
         }
+
+        if (string.IsNullOrEmpty(pedido.ConfirmacionToken))
+            pedido.ConfirmacionToken = Guid.NewGuid().ToString("N");
+
         await _db.SaveChangesAsync();
 
-        _ = _email.SendShippingEmailAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, dto.NumeroGuia, dto.Transportadora, fotoUrl);
+        var baseUrlConfirm = _config["AppSettings:BaseUrl"] ?? "http://localhost:5000";
+        var confirmarUrl = $"{baseUrlConfirm}/api/pedidos/confirmar/{pedido.ConfirmacionToken}";
 
-        return Ok(ApiResponse<object>.Ok(new { }, "Correo de envío enviado"));
+        _ = _email.SendShippingNotificationEmailAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, dto.NumeroGuia, dto.Transportadora, fotoBytes, fotoMimeType, confirmarUrl);
+
+        var guiaMensaje = string.IsNullOrEmpty(dto.NumeroGuia)
+            ? $"Tu pedido ha sido despachado y está en camino."
+            : $"Tu pedido fue despachado con guía {dto.NumeroGuia}" + (string.IsNullOrEmpty(dto.Transportadora) ? "." : $" por {dto.Transportadora}.");
+        if (pedido.ClienteID > 0)
+            _ = _notif.CreateAsync(pedido.ClienteID, "🚚 Pedido enviado", guiaMensaje, "info", $"pedido-{id}");
+
+        return Ok(ApiResponse<object>.Ok(new { }, "Correo de guía enviado"));
+    }
+
+    [HttpPost("{id}/comprobante")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> SubirComprobante(int id, IFormFile archivo)
+    {
+        var pedido = await _db.Pedidos.FindAsync(id);
+        if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
+
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+
+        var ext = Path.GetExtension(archivo.FileName);
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsPath, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+            await archivo.CopyToAsync(stream);
+
+        pedido.ComprobantePago = $"/uploads/{fileName}";
+        await _db.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new { url = pedido.ComprobantePago }));
     }
 
     [HttpDelete("{id}")]
@@ -397,7 +509,6 @@ public class PedidosController : ControllerBase
 
         if (hasDelete)
         {
-            // Admin: elimina el registro permanentemente del historial
             var movimientos = await _db.StockMovimientos
                 .Where(m => m.ReferenciaTipo == "pedido" || m.ReferenciaTipo == "venta_manual")
                 .Where(m => m.ReferenciaID == id)
@@ -409,55 +520,34 @@ public class PedidosController : ControllerBase
             return Ok(ApiResponse<object>.Ok(new { }, "Registro eliminado"));
         }
 
-        // Cliente: solo puede cancelar si no está entregado
         if (pedido.Estado == "Entregado" || pedido.Estado == "Completada" || pedido.Estado == "Completado")
             return BadRequest(ApiResponse<object>.Fail("No se puede cancelar un pedido entregado"));
 
         pedido.Estado = "Cancelado";
         pedido.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-
         return Ok(ApiResponse<object>.Ok(new { }, "Pedido cancelado"));
-    }
-
-    [HttpPost("{id}/comprobante")]
-    public async Task<ActionResult<ApiResponse<object>>> SubirComprobante(int id, [FromForm] IFormFile archivo)
-    {
-        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.PedidoID == id);
-        if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
-        if (archivo == null || archivo.Length == 0)
-            return BadRequest(ApiResponse<object>.Fail("Archivo vacío"));
-
-        var uploadsPath = Path.Combine(_env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads");
-        Directory.CreateDirectory(uploadsPath);
-        var ext = Path.GetExtension(archivo.FileName);
-        var fileName = $"comprobante_{id}{ext}";
-        var filePath = Path.Combine(uploadsPath, fileName);
-        using var stream = new FileStream(filePath, FileMode.Create);
-        await archivo.CopyToAsync(stream);
-
-        var baseUrl = _config["AppSettings:BaseUrl"]?.TrimEnd('/') ?? "";
-        var url = string.IsNullOrEmpty(baseUrl) ? $"/uploads/{fileName}" : $"{baseUrl}/uploads/{fileName}";
-
-        pedido.ComprobantePago = url;
-        await _db.SaveChangesAsync();
-
-        return Ok(ApiResponse<object>.Ok(new { url }, "Comprobante subido"));
     }
 
     private static PedidoDto MapToDto(Pedido p) => new()
     {
         PedidoID = p.PedidoID, ClienteID = p.ClienteID, FechaPedido = p.FechaPedido,
         NombreCliente = p.NombreCliente, EmailCliente = p.EmailCliente, TelefonoCliente = p.TelefonoCliente,
+        DocumentoCliente = p.DocumentoCliente,
         DireccionEnvio = p.DireccionEnvio, Ciudad = p.Ciudad, MetodoPago = p.MetodoPago,
         Subtotal = p.Subtotal, Descuento = p.Descuento, Envio = p.Envio, Total = p.Total,
         Estado = p.Estado, NumeroGuia = p.NumeroGuia, Transportadora = p.Transportadora,
-        ComprobantePago = p.ComprobantePago,
+        ComprobantePago = p.ComprobantePago, Notas = p.Notas,
         Detalles = p.Detalles?.Select(d => new PedidoDetalleDto
         {
-            ProductoID = d.ProductoID, ProductoNombre = d.Producto?.Nombre ?? "",
-            Talla = d.Talla?.Nombre, Color = d.Color?.Nombre,
-            Cantidad = d.Cantidad, PrecioUnitario = d.PrecioUnitario, Subtotal = d.Subtotal
+            ProductoID = d.ProductoID,
+            ProductoNombre = d.Producto?.Nombre ?? "",
+            ImagenProducto = d.ImagenProducto ?? d.Producto?.ImagenPrincipal,
+            Talla = d.TallaNombre ?? d.Talla?.Nombre,
+            Color = d.ColorNombre ?? d.Color?.Nombre,
+            Cantidad = d.Cantidad,
+            PrecioUnitario = d.PrecioUnitario,
+            Subtotal = d.Subtotal
         }).ToList() ?? new()
     };
 }
