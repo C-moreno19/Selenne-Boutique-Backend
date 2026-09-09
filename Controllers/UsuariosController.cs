@@ -124,6 +124,11 @@ public class UsuariosController : ControllerBase
         var u = await _db.Usuarios.FindAsync(id);
         if (u == null) return NotFound(ApiResponse<object>.Fail("No encontrado"));
         u.Estado = "eliminado";
+        // El check de duplicados excluye a los eliminados, pero la restriccion
+        // unica de la base de datos sigue reservando el Email para siempre si
+        // no lo liberamos aca. Se libera para permitir re-registro.
+        var marcador = $"eliminado_{u.UsuarioID}_{u.Email}";
+        u.Email = marcador.Length > 100 ? marcador[..100] : marcador;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { }, "Usuario eliminado permanentemente"));
     }
