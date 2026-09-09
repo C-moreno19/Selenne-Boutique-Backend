@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SelenneApi.Exceptions;
 
 namespace SelenneApi.Middleware;
@@ -44,11 +45,22 @@ public class ErrorHandlingMiddleware
         else if (ex is DbUpdateException dbEx)
         {
             status = HttpStatusCode.BadRequest;
-            var inner = dbEx.InnerException?.Message ?? dbEx.Message;
-            if (inner.Contains("REFERENCE") || inner.Contains("FK_") || inner.Contains("FOREIGN KEY"))
-                message = "No se puede realizar esta operación porque el registro está siendo utilizado en otras partes del sistema (pedidos, ventas, compras u otros módulos).";
+            if (dbEx.InnerException is PostgresException pgEx)
+            {
+                message = pgEx.SqlState switch
+                {
+                    PostgresErrorCodes.UniqueViolation => MensajeDeDuplicado(pgEx.ConstraintName),
+                    PostgresErrorCodes.ForeignKeyViolation => "No se puede realizar esta operación porque el registro está siendo utilizado en otras partes del sistema (pedidos, ventas, compras u otros módulos).",
+                    _ => "Error al guardar en la base de datos.",
+                };
+            }
             else
-                message = $"Error al guardar en la base de datos: {inner}";
+            {
+                var inner = dbEx.InnerException?.Message ?? dbEx.Message;
+                message = inner.Contains("REFERENCE") || inner.Contains("FK_") || inner.Contains("FOREIGN KEY")
+                    ? "No se puede realizar esta operación porque el registro está siendo utilizado en otras partes del sistema (pedidos, ventas, compras u otros módulos)."
+                    : "Error al guardar en la base de datos.";
+            }
         }
         else
         {
@@ -60,5 +72,14 @@ public class ErrorHandlingMiddleware
         context.Response.StatusCode = (int)status;
         var response = JsonSerializer.Serialize(new { success = false, message, errors = (object?)null });
         await context.Response.WriteAsync(response);
+    }
+
+    // El nombre de la constraint (ej. "Usuarios_Email_Key") es lo unico que
+    // Postgres nos da sin exponer el detalle crudo de la fila duplicada.
+    private static string MensajeDeDuplicado(string? constraintName)
+    {
+        if (constraintName != null && constraintName.Contains("Email", StringComparison.OrdinalIgnoreCase))
+            return "Ese correo electrónico ya está registrado.";
+        return "Ya existe un registro con esos datos.";
     }
 }
