@@ -16,7 +16,8 @@ public class ProductosController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IPermissionService _perms;
-    public ProductosController(AppDbContext db, IPermissionService perms) { _db = db; _perms = perms; }
+    private readonly IConfiguration _config;
+    public ProductosController(AppDbContext db, IPermissionService perms, IConfiguration config) { _db = db; _perms = perms; _config = config; }
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? estado, [FromQuery] int? categoriaId, [FromQuery] string? buscar)
@@ -259,7 +260,11 @@ public class ProductosController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { p.PrecioOferta }, "Descuento aplicado"));
     }
 
-    private static ProductoDto MapDto(Producto p) => new()
+    private ProductoDto MapDto(Producto p)
+    {
+        var stockMinimo = _config.GetValue<int>("Inventario:StockMinimo", 5);
+        var stockTotal = (p.StockVariantes == null || !p.StockVariantes.Any()) ? p.Stock : p.StockVariantes.Sum(v => v.Stock);
+        return new()
     {
         ProductoID = p.ProductoID,
         Codigo = p.Codigo,
@@ -286,13 +291,13 @@ public class ProductosController : ControllerBase
             ColorNombre = v.ColorNombre,
             Stock = v.Stock
         }).ToList() ?? new(),
-        AgotadoGeneral = (p.StockVariantes == null || !p.StockVariantes.Any())
-            ? p.Stock <= 0
-            : p.StockVariantes.Sum(v => v.Stock) <= 0,
+        AgotadoGeneral = stockTotal <= 0,
+        StockBajo = stockTotal > 0 && stockTotal <= stockMinimo,
         Tallas = p.ProductoTallas?.Select(pt => new TallaStockDto { TallaID = pt.TallaID, Nombre = pt.Talla?.Nombre ?? "", Stock = pt.StockTalla }).ToList() ?? new(),
         Colores = p.ProductoColores?.Select(pc => new ColorDto { ColorID = pc.ColorID, Nombre = pc.Color?.Nombre ?? "", CodigoHex = pc.Color?.CodigoHex }).ToList() ?? new(),
         Materiales = p.ProductoMateriales?.Select(pm => pm.Material?.Nombre ?? "").Where(m => m != "").ToList() ?? new(),
         PromedioValoracion = p.Valoraciones?.Any() == true ? p.Valoraciones.Average(v => v.Puntuacion) : null,
         TotalValoraciones = p.Valoraciones?.Count ?? 0
-    };
+        };
+    }
 }

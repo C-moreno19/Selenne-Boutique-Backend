@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public class PedidosControllerTests : IDisposable
     private readonly Mock<IEmailService> _emailMock;
     private readonly Mock<INotificationService> _notifMock;
     private readonly Mock<IConfiguration> _configMock;
+    private readonly Mock<IWebHostEnvironment> _envMock;
     private readonly PedidosController _controller;
 
     public PedidosControllerTests()
@@ -42,11 +44,15 @@ public class PedidosControllerTests : IDisposable
         _emailMock = new Mock<IEmailService>();
         _notifMock = new Mock<INotificationService>();
         _configMock = new Mock<IConfiguration>();
+        _envMock = new Mock<IWebHostEnvironment>();
 
         _configMock.Setup(c => c["AppSettings:BaseUrl"]).Returns("http://localhost:5000");
+        // GetValue<T>() (usado por NotificarStockBajoAsync) llama a GetSection() internamente;
+        // sin este stub devuelve null y explota con NullReferenceException.
+        _configMock.Setup(c => c.GetSection(It.IsAny<string>())).Returns(Mock.Of<IConfigurationSection>());
 
         _controller = new PedidosController(
-            _db, _emailMock.Object, _notifMock.Object, _configMock.Object);
+            _db, _emailMock.Object, _notifMock.Object, _configMock.Object, _envMock.Object);
     }
 
     // ── Helpers de contexto HTTP ──────────────────────────────────────

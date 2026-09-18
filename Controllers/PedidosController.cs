@@ -118,6 +118,7 @@ public class PedidosController : ControllerBase
             };
 
             using var txManual = await _db.Database.BeginTransactionAsync();
+            var stockAntesManual = new List<(Producto Prod, int StockAntes)>();
             try
             {
                 _db.Pedidos.Add(pedidoManual);
@@ -139,6 +140,7 @@ public class PedidosController : ControllerBase
                         PrecioUnitario = precio,
                         Subtotal = precio * item.Cantidad
                     });
+                    stockAntesManual.Add((prod, prod.Stock));
                     prod.Stock -= item.Cantidad;
                     _db.StockMovimientos.Add(new StockMovimiento
                     {
@@ -165,6 +167,7 @@ public class PedidosController : ControllerBase
             var adminEmailManual = _config["Email:FromEmail"];
             if (!string.IsNullOrEmpty(adminEmailManual))
                 _ = _email.SendOrderConfirmationAdminAsync(adminEmailManual, pedidoManual.NombreCliente, pedidoManual.PedidoID, pedidoManual.Total);
+            _ = NotificarStockBajoAsync(stockAntesManual);
 
             return CreatedAtAction(nameof(GetById), new { id = pedidoManual.PedidoID },
                 ApiResponse<object>.Ok(new { pedidoId = pedidoManual.PedidoID, total = pedidoManual.Total }, "Venta registrada"));
@@ -230,6 +233,7 @@ public class PedidosController : ControllerBase
         };
 
         using var transaction = await _db.Database.BeginTransactionAsync();
+        var stockAntesCheckout = new List<(Producto Prod, int StockAntes)>();
         try
         {
             _db.Pedidos.Add(pedido);
@@ -248,6 +252,7 @@ public class PedidosController : ControllerBase
                     PrecioUnitario = precio,
                     Subtotal = precio * it.Cant
                 });
+                stockAntesCheckout.Add((it.Prod, it.Prod.Stock));
                 it.Prod.Stock -= it.Cant;
                 _db.StockMovimientos.Add(new StockMovimiento
                 {
@@ -285,6 +290,7 @@ public class PedidosController : ControllerBase
         var adminEmail = _config["Email:FromEmail"];
         if (!string.IsNullOrEmpty(adminEmail))
             _ = _email.SendOrderConfirmationAdminAsync(adminEmail, nombreC, pedido.PedidoID, subtotal);
+        _ = NotificarStockBajoAsync(stockAntesCheckout);
 
         return CreatedAtAction(nameof(GetById), new { id = pedido.PedidoID },
             ApiResponse<object>.Ok(new { pedidoId = pedido.PedidoID, total = subtotal }, "Pedido creado"));
@@ -527,6 +533,37 @@ public class PedidosController : ControllerBase
         pedido.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(new { }, "Pedido cancelado"));
+    }
+
+    // Avisa a los administradores solo cuando el stock de un producto CRUZA el umbral
+    // en esta venta (antes estaba por encima, ahora quedó por debajo) — asi no se
+    // manda una notificacion repetida por cada venta mientras el producto sigue bajo.
+    private async Task NotificarStockBajoAsync(List<(Producto Prod, int StockAntes)> items)
+    {
+        var stockMinimo = _config.GetValue<int>("Inventario:StockMinimo", 5);
+        var productosBajos = items
+            .Where(x => x.StockAntes > stockMinimo && x.Prod.Stock <= stockMinimo)
+            .GroupBy(x => x.Prod.ProductoID)
+            .Select(g => g.First().Prod)
+            .ToList();
+        if (!productosBajos.Any()) return;
+
+        var adminIds = await _db.Usuarios
+            .Where(u => u.Estado == "activo" && (
+                (u.Rol != null && u.Rol.Nombre == "Administrador") ||
+                _db.RolePermissions.Any(rp => rp.RoleID == u.RoleID && rp.Permission.Nombre == "productos:editar")))
+            .Select(u => u.UsuarioID)
+            .Distinct()
+            .ToListAsync();
+        if (!adminIds.Any()) return;
+
+        foreach (var prod in productosBajos)
+        {
+            var mensaje = prod.Stock <= 0
+                ? $"\"{prod.Nombre}\" se agotó."
+                : $"\"{prod.Nombre}\" tiene stock bajo: quedan {prod.Stock} unidades.";
+            await _notif.CreateBulkAsync(adminIds, "Stock bajo", mensaje, "warning");
+        }
     }
 
     private static PedidoDto MapToDto(Pedido p) => new()

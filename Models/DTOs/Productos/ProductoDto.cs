@@ -23,6 +23,7 @@ public class ProductoDto
     public List<ImagenDto> Imagenes { get; set; } = new();
     public List<VarianteStockDto> Variantes { get; set; } = new();
     public bool AgotadoGeneral { get; set; } = false;
+    public bool StockBajo { get; set; } = false;
     public List<TallaStockDto> Tallas { get; set; } = new();
     public List<string> Materiales { get; set; } = new();
     public List<ColorDto> Colores { get; set; } = new();
