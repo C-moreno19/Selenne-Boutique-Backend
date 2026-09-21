@@ -20,10 +20,11 @@ public class PedidosController : ControllerBase
     private readonly INotificationService _notif;
     private readonly IConfiguration _config;
     private readonly IWebHostEnvironment _env;
+    private readonly ICuponService _cupones;
 
-    public PedidosController(AppDbContext db, IEmailService email, INotificationService notif, IConfiguration config, IWebHostEnvironment env)
+    public PedidosController(AppDbContext db, IEmailService email, INotificationService notif, IConfiguration config, IWebHostEnvironment env, ICuponService cupones)
     {
-        _db = db; _email = email; _notif = notif; _config = config; _env = env;
+        _db = db; _email = email; _notif = notif; _config = config; _env = env; _cupones = cupones;
     }
 
     [HttpGet]
@@ -34,6 +35,7 @@ public class PedidosController : ControllerBase
             .Include(p => p.Detalles).ThenInclude(d => d.Producto)
             .Include(p => p.Detalles).ThenInclude(d => d.Talla)
             .Include(p => p.Detalles).ThenInclude(d => d.Color)
+            .Include(p => p.Cupon)
             .OrderByDescending(p => p.FechaPedido)
             .ToListAsync();
         return Ok(ApiResponse<List<PedidoDto>>.Ok(items.Select(MapToDto).ToList()));
@@ -47,6 +49,7 @@ public class PedidosController : ControllerBase
             .Include(p => p.Detalles).ThenInclude(d => d.Producto)
             .Include(p => p.Detalles).ThenInclude(d => d.Talla)
             .Include(p => p.Detalles).ThenInclude(d => d.Color)
+            .Include(p => p.Cupon)
             .Where(p => p.ClienteID == userId)
             .OrderByDescending(p => p.FechaPedido)
             .ToListAsync();
@@ -63,6 +66,7 @@ public class PedidosController : ControllerBase
             .Include(p => p.Detalles).ThenInclude(d => d.Producto)
             .Include(p => p.Detalles).ThenInclude(d => d.Talla)
             .Include(p => p.Detalles).ThenInclude(d => d.Color)
+            .Include(p => p.Cupon)
             .FirstOrDefaultAsync(p => p.PedidoID == id);
 
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
@@ -241,6 +245,19 @@ public class PedidosController : ControllerBase
 
         var subtotal = itemsCheckout.Sum(it => (it.Prod.PrecioOferta ?? it.Prod.PrecioVenta) * it.Cant);
 
+        // El descuento SIEMPRE se recalcula acá server-side — nunca se confía
+        // en un monto que venga del cliente, solo en el código.
+        decimal descuentoAplicado = 0;
+        Cupon? cuponAplicado = null;
+        if (!string.IsNullOrWhiteSpace(dto.CuponCodigo))
+        {
+            var resultadoCupon = await _cupones.ValidarAsync(dto.CuponCodigo, subtotal);
+            if (!resultadoCupon.Valido)
+                return BadRequest(ApiResponse<object>.Fail(resultadoCupon.Error ?? "Cupón inválido"));
+            cuponAplicado = resultadoCupon.Cupon;
+            descuentoAplicado = resultadoCupon.MontoDescuento;
+        }
+
         var pedido = new Pedido
         {
             ClienteID = userId,
@@ -257,7 +274,9 @@ public class PedidosController : ControllerBase
             Banco = dto.Banco,
             TipoCuenta = dto.TipoCuenta,
             Subtotal = subtotal,
-            Total = subtotal,
+            Descuento = descuentoAplicado,
+            Total = subtotal - descuentoAplicado,
+            CuponID = cuponAplicado?.CuponID,
             Notas = dto.Notas,
             ComprobantePago = dto.ComprobantePago,
             FechaPedido = DateTime.UtcNow,
@@ -307,6 +326,8 @@ public class PedidosController : ControllerBase
                 if (cartExtra.Any()) _db.Carrito.RemoveRange(cartExtra);
             }
 
+            if (cuponAplicado != null) cuponAplicado.UsosActuales += 1;
+
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
         }
@@ -317,16 +338,16 @@ public class PedidosController : ControllerBase
         }
 
         await _notif.CreateAsync(userId, "Pedido creado",
-            $"Tu pedido por ${subtotal:N0} ha sido recibido y está siendo procesado.", "success", $"pedido:{pedido.PedidoID}");
+            $"Tu pedido por ${pedido.Total:N0} ha sido recibido y está siendo procesado.", "success", $"pedido:{pedido.PedidoID}");
 
-        _ = _email.SendOrderConfirmationClienteAsync(emailC, nombreC, pedido.PedidoID, subtotal);
+        _ = _email.SendOrderConfirmationClienteAsync(emailC, nombreC, pedido.PedidoID, pedido.Total);
         var adminEmail = _config["Email:FromEmail"];
         if (!string.IsNullOrEmpty(adminEmail))
-            _ = _email.SendOrderConfirmationAdminAsync(adminEmail, nombreC, pedido.PedidoID, subtotal);
+            _ = _email.SendOrderConfirmationAdminAsync(adminEmail, nombreC, pedido.PedidoID, pedido.Total);
         _ = NotificarStockBajoAsync(stockAntesCheckout);
 
         return CreatedAtAction(nameof(GetById), new { id = pedido.PedidoID },
-            ApiResponse<object>.Ok(new { pedidoId = pedido.PedidoID, total = subtotal }, "Pedido creado"));
+            ApiResponse<object>.Ok(new { pedidoId = pedido.PedidoID, total = pedido.Total }, "Pedido creado"));
     }
 
     [HttpPut("{id}/estado")]
@@ -606,6 +627,7 @@ public class PedidosController : ControllerBase
         DocumentoCliente = p.DocumentoCliente,
         DireccionEnvio = p.DireccionEnvio, Ciudad = p.Ciudad, MetodoPago = p.MetodoPago,
         Subtotal = p.Subtotal, Descuento = p.Descuento, Envio = p.Envio, Total = p.Total,
+        CuponID = p.CuponID, CuponCodigo = p.Cupon?.Codigo,
         Estado = p.Estado, NumeroGuia = p.NumeroGuia, Transportadora = p.Transportadora,
         ComprobantePago = p.ComprobantePago, Notas = p.Notas,
         Detalles = p.Detalles?.Select(d => new PedidoDetalleDto

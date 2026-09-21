@@ -15,6 +15,8 @@ public class PedidoDto
     public decimal Descuento { get; set; }
     public decimal Envio { get; set; }
     public decimal Total { get; set; }
+    public int? CuponID { get; set; }
+    public string? CuponCodigo { get; set; }
     public string Estado { get; set; } = string.Empty;
     public string? NumeroGuia { get; set; }
     public string? Transportadora { get; set; }

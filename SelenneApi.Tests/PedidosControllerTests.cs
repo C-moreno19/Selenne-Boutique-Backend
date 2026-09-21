@@ -51,8 +51,11 @@ public class PedidosControllerTests : IDisposable
         // sin este stub devuelve null y explota con NullReferenceException.
         _configMock.Setup(c => c.GetSection(It.IsAny<string>())).Returns(Mock.Of<IConfigurationSection>());
 
+        // Se usa la implementacion real de ICuponService (no un mock) porque
+        // valida contra el mismo _db en memoria -- asi las pruebas ejercitan
+        // la logica real de validacion de cupones, no un doble simulado.
         _controller = new PedidosController(
-            _db, _emailMock.Object, _notifMock.Object, _configMock.Object, _envMock.Object);
+            _db, _emailMock.Object, _notifMock.Object, _configMock.Object, _envMock.Object, new CuponService(_db));
     }
 
     // ── Helpers de contexto HTTP ──────────────────────────────────────
@@ -280,6 +283,98 @@ public class PedidosControllerTests : IDisposable
         Assert.NotNull(pedido);
         Assert.Equal("Pendiente", pedido.Estado);
         Assert.Equal(240000m, pedido.Total);  // 80.000 × 3 unidades
+    }
+
+    /// <summary>
+    /// Prueba: un cupón de porcentaje válido descuenta el Total (no el Subtotal),
+    /// queda registrado en el pedido, y su contador de usos se incrementa.
+    /// </summary>
+    [Fact]
+    public async Task Create_ConCuponValido_AplicaDescuentoEIncrementaUso()
+    {
+        await SeedUsuarioAsync(id: 5, email: "descuento@test.com");
+        await SeedProductoAsync(id: 25, precio: 100000m, stock: 10);
+        SetAuthenticatedUser(userId: 5);
+
+        var cupon = new Cupon
+        {
+            Codigo = "BIENVENIDA10",
+            TipoDescuento = "porcentaje",
+            ValorDescuento = 10,
+            Activo = true,
+            UsosActuales = 0
+        };
+        _db.Cupones.Add(cupon);
+        await _db.SaveChangesAsync();
+
+        _notifMock
+            .Setup(n => n.CreateAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<string?>()))
+            .Returns(Task.CompletedTask);
+
+        var dto = new CrearPedidoRequestDto
+        {
+            NombreCliente = "Cliente Descuento",
+            EmailCliente = "descuento@test.com",
+            TelefonoCliente = "3001234567",
+            DireccionEnvio = "Calle 8 # 9-10",
+            Ciudad = "Bogotá",
+            MetodoPago = "Efectivo",
+            CuponCodigo = "bienvenida10",  // minusculas a proposito: la validacion no es case-sensitive
+            Items = new List<PedidoItemDto>
+            {
+                new PedidoItemDto { ProductoID = 25, Cantidad = 2 }  // subtotal 200.000
+            }
+        };
+
+        var result = await _controller.Create(dto);
+
+        Assert.IsType<CreatedAtActionResult>(result.Result);
+
+        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.ClienteID == 5);
+        Assert.NotNull(pedido);
+        Assert.Equal(200000m, pedido!.Subtotal);
+        Assert.Equal(20000m, pedido.Descuento);   // 10% de 200.000
+        Assert.Equal(180000m, pedido.Total);
+        Assert.Equal(cupon.CuponID, pedido.CuponID);
+
+        var cuponActualizado = await _db.Cupones.FindAsync(cupon.CuponID);
+        Assert.Equal(1, cuponActualizado!.UsosActuales);
+    }
+
+    /// <summary>
+    /// Prueba: un código de cupón inexistente rechaza todo el pedido con 400,
+    /// sin descontar stock ni crear el pedido a medias.
+    /// </summary>
+    [Fact]
+    public async Task Create_ConCuponInexistente_RetornaBadRequestYNoCreaPedido()
+    {
+        await SeedUsuarioAsync(id: 6, email: "sincupon@test.com");
+        await SeedProductoAsync(id: 26, precio: 50000m, stock: 5);
+        SetAuthenticatedUser(userId: 6);
+
+        var dto = new CrearPedidoRequestDto
+        {
+            NombreCliente = "Cliente Sin Cupon",
+            EmailCliente = "sincupon@test.com",
+            TelefonoCliente = "3009998888",
+            DireccionEnvio = "Calle 1 # 1-1",
+            Ciudad = "Cali",
+            MetodoPago = "Efectivo",
+            CuponCodigo = "NOEXISTE",
+            Items = new List<PedidoItemDto>
+            {
+                new PedidoItemDto { ProductoID = 26, Cantidad = 1 }
+            }
+        };
+
+        var result = await _controller.Create(dto);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.False(await _db.Pedidos.AnyAsync(p => p.ClienteID == 6));
+        var producto = await _db.Productos.FindAsync(26);
+        Assert.Equal(5, producto!.Stock);  // stock intacto
     }
 
     /// <summary>

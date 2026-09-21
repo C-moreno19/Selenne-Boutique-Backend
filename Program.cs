@@ -29,6 +29,7 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICuponService, CuponService>();
 builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 
 // JWT Authentication

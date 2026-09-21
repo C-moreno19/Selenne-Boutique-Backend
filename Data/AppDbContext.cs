@@ -40,6 +40,7 @@ public class AppDbContext : DbContext
     public DbSet<PedidoDetalle> PedidoDetalles { get; set; }
     public DbSet<Venta> Ventas { get; set; }
     public DbSet<VentaDetalle> VentaDetalles { get; set; }
+    public DbSet<Cupon> Cupones { get; set; }
 
     // User features
     public DbSet<Favorito> Favoritos { get; set; }

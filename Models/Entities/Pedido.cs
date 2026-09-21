@@ -76,8 +76,13 @@ public class Pedido
     public string? ConfirmacionToken { get; set; }
     public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 
+    public int? CuponID { get; set; }
+
     [ForeignKey("ClienteID")]
     public Usuario Cliente { get; set; } = null!;
+
+    [ForeignKey("CuponID")]
+    public Cupon? Cupon { get; set; }
 
     public ICollection<PedidoDetalle> Detalles { get; set; } = new List<PedidoDetalle>();
 }
