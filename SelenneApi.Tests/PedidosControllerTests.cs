@@ -135,8 +135,9 @@ public class PedidosControllerTests : IDisposable
     // ═══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Prueba 1: Usuario no autenticado sin email → 400 Bad Request.
-    /// Verifica que el sistema rechaza el pedido cuando no hay sesión activa.
+    /// Prueba 1: Checkout de invitado (sin sesión) sin email → 400 Bad Request.
+    /// El checkout de invitado esta permitido, pero exige nombre y correo
+    /// para poder identificar/crear la cuenta minima que recibe el pedido.
     /// </summary>
     [Fact]
     public async Task Create_SinAutenticacionYSinEmail_RetornaBadRequest()
@@ -161,7 +162,7 @@ public class PedidosControllerTests : IDisposable
         var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
         var response = Assert.IsType<ApiResponse<object>>(badRequest.Value);
         Assert.False(response.Success);
-        Assert.Contains("sesión", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("correo", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -279,6 +280,97 @@ public class PedidosControllerTests : IDisposable
         Assert.NotNull(pedido);
         Assert.Equal("Pendiente", pedido.Estado);
         Assert.Equal(240000m, pedido.Total);  // 80.000 × 3 unidades
+    }
+
+    /// <summary>
+    /// Prueba: checkout de invitado (sin sesión) con nombre/correo completos →
+    /// crea el pedido y una cuenta mínima nueva asociada a ese email, sin
+    /// exigir login previo.
+    /// </summary>
+    [Fact]
+    public async Task Create_ComoInvitado_CreaPedidoYCuentaMinima()
+    {
+        // Arrange: sin usuario autenticado, producto con stock suficiente
+        await SeedProductoAsync(id: 30, precio: 40000m, stock: 5);
+        SetAnonymousUser();
+
+        _notifMock
+            .Setup(n => n.CreateAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<string?>()))
+            .Returns(Task.CompletedTask);
+
+        var dto = new CrearPedidoRequestDto
+        {
+            NombreCliente = "Invitada Anonima",
+            EmailCliente = "invitada@test.com",
+            TelefonoCliente = "3001112222",
+            DireccionEnvio = "Calle 5 # 6-7",
+            Ciudad = "Cali",
+            MetodoPago = "Efectivo",
+            Items = new List<PedidoItemDto>
+            {
+                new PedidoItemDto { ProductoID = 30, Cantidad = 2 }
+            }
+        };
+
+        // Act
+        var result = await _controller.Create(dto);
+
+        // Assert - respuesta HTTP 201
+        var created = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<object>>(created.Value);
+        Assert.True(response.Success);
+
+        // Assert - se creó una cuenta mínima para el invitado
+        var usuarioCreado = await _db.Usuarios.FirstOrDefaultAsync(u => u.Email == "invitada@test.com");
+        Assert.NotNull(usuarioCreado);
+        Assert.Equal("Invitada Anonima", usuarioCreado!.NombreCompleto);
+
+        // Assert - el pedido quedó asociado a esa cuenta
+        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.EmailCliente == "invitada@test.com");
+        Assert.NotNull(pedido);
+        Assert.Equal(usuarioCreado.UsuarioID, pedido!.ClienteID);
+    }
+
+    /// <summary>
+    /// Prueba: checkout de invitado con un email que ya tiene cuenta → el
+    /// pedido se asocia a la cuenta existente en vez de crear una duplicada.
+    /// </summary>
+    [Fact]
+    public async Task Create_ComoInvitadoConEmailExistente_ReutilizaLaCuenta()
+    {
+        var existente = await SeedUsuarioAsync(id: 40, email: "yaexiste@test.com");
+        await SeedProductoAsync(id: 31, precio: 30000m, stock: 5);
+        SetAnonymousUser();
+
+        _notifMock
+            .Setup(n => n.CreateAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<string?>()))
+            .Returns(Task.CompletedTask);
+
+        var dto = new CrearPedidoRequestDto
+        {
+            NombreCliente = "Nombre Distinto En El Form",
+            EmailCliente = "yaexiste@test.com",
+            TelefonoCliente = "3009998888",
+            DireccionEnvio = "Carrera 9 # 10-11",
+            Ciudad = "Medellín",
+            MetodoPago = "Efectivo",
+            Items = new List<PedidoItemDto>
+            {
+                new PedidoItemDto { ProductoID = 31, Cantidad = 1 }
+            }
+        };
+
+        var result = await _controller.Create(dto);
+
+        Assert.IsType<CreatedAtActionResult>(result.Result);
+        Assert.Equal(1, await _db.Usuarios.CountAsync(u => u.Email == "yaexiste@test.com"));
+        var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.EmailCliente == "yaexiste@test.com");
+        Assert.NotNull(pedido);
+        Assert.Equal(existente.UsuarioID, pedido!.ClienteID);
     }
 
     // ═══════════════════════════════════════════════════════════════

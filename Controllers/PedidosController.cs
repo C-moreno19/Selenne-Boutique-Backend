@@ -173,9 +173,42 @@ public class PedidosController : ControllerBase
                 ApiResponse<object>.Ok(new { pedidoId = pedidoManual.PedidoID, total = pedidoManual.Total }, "Venta registrada"));
         }
 
-        // Checkout de cliente — cualquier usuario autenticado puede comprar
-        var usuario = await _db.Usuarios.FindAsync(userId);
-        if (usuario == null) return Unauthorized(ApiResponse<object>.Fail("Debes iniciar sesión para realizar un pedido"));
+        // Checkout de cliente — autenticado, o invitado sin cuenta.
+        // Al invitado se le crea una cuenta minima (sin contraseña utilizable)
+        // identificada por su email, para no requerir cambios de esquema en
+        // Pedidos.ClienteID (es NOT NULL / FK a Usuarios). Si ya existe una
+        // cuenta con ese email, se reutiliza — así el pedido queda asociado
+        // a su historial si más adelante inicia sesión con "olvidé mi clave".
+        Usuario? usuario;
+        if (userId > 0)
+        {
+            usuario = await _db.Usuarios.FindAsync(userId);
+            if (usuario == null) return Unauthorized(ApiResponse<object>.Fail("Debes iniciar sesión para realizar un pedido"));
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(dto.NombreCliente) || string.IsNullOrWhiteSpace(dto.EmailCliente))
+                return BadRequest(ApiResponse<object>.Fail("Nombre y correo son obligatorios"));
+
+            usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.Email == dto.EmailCliente && u.Estado != "eliminado");
+            if (usuario == null)
+            {
+                var clienteRole = await _db.Roles.FirstOrDefaultAsync(r => r.Nombre == "Cliente");
+                usuario = new Usuario
+                {
+                    NombreCompleto = dto.NombreCliente,
+                    Email = dto.EmailCliente,
+                    Telefono = dto.TelefonoCliente,
+                    Documento = dto.DocumentoCliente,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+                    RoleID = clienteRole?.RoleID,
+                    Estado = "activo"
+                };
+                _db.Usuarios.Add(usuario);
+                await _db.SaveChangesAsync();
+            }
+            userId = usuario.UsuarioID;
+        }
 
         var nombreC = !string.IsNullOrWhiteSpace(dto.NombreCliente) ? dto.NombreCliente : usuario.NombreCompleto;
         var emailC  = !string.IsNullOrWhiteSpace(dto.EmailCliente)  ? dto.EmailCliente  : usuario.Email;
