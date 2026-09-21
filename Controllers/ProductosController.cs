@@ -264,6 +264,7 @@ public class ProductosController : ControllerBase
     {
         var stockMinimo = _config.GetValue<int>("Inventario:StockMinimo", 5);
         var stockTotal = (p.StockVariantes == null || !p.StockVariantes.Any()) ? p.Stock : p.StockVariantes.Sum(v => v.Stock);
+        var valoracionesAprobadas = p.Valoraciones?.Where(v => v.Estado == "aprobado").ToList() ?? new();
         return new()
     {
         ProductoID = p.ProductoID,
@@ -296,8 +297,8 @@ public class ProductosController : ControllerBase
         Tallas = p.ProductoTallas?.Select(pt => new TallaStockDto { TallaID = pt.TallaID, Nombre = pt.Talla?.Nombre ?? "", Stock = pt.StockTalla }).ToList() ?? new(),
         Colores = p.ProductoColores?.Select(pc => new ColorDto { ColorID = pc.ColorID, Nombre = pc.Color?.Nombre ?? "", CodigoHex = pc.Color?.CodigoHex }).ToList() ?? new(),
         Materiales = p.ProductoMateriales?.Select(pm => pm.Material?.Nombre ?? "").Where(m => m != "").ToList() ?? new(),
-        PromedioValoracion = p.Valoraciones?.Any() == true ? p.Valoraciones.Average(v => v.Puntuacion) : null,
-        TotalValoraciones = p.Valoraciones?.Count ?? 0
+        PromedioValoracion = valoracionesAprobadas.Any() ? valoracionesAprobadas.Average(v => v.Puntuacion) : null,
+        TotalValoraciones = valoracionesAprobadas.Count
         };
     }
 }
