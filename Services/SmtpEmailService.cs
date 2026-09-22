@@ -238,4 +238,13 @@ public class SmtpEmailService : IEmailService
             "<p style='margin:0;font-size:18px;font-weight:700;color:#111827'>$" + total.ToString("N0") + "</p>" +
             "</div>" +
             "<p style='margin:0;font-size:13px;color:#9ca3af'>Te notificaremos cuando tu pedido sea despachado con la información de envío.</p>"));
+
+    public async Task SendCampaignEmailAsync(string to, string asunto, string mensaje, string unsubscribeUrl)
+    {
+        var mensajeHtml = System.Net.WebUtility.HtmlEncode(mensaje).Replace("\n", "<br/>");
+        await SendAsync(to, asunto,
+            Card(Header(asunto) +
+            "<p style='margin:0 0 20px;font-size:14px;color:#374151;line-height:1.7'>" + mensajeHtml + "</p>" +
+            "<p style='margin:0;font-size:11px;color:#c084a5'><a href='" + unsubscribeUrl + "' style='color:#c084a5'>Darme de baja de este correo</a></p>"));
+    }
 }

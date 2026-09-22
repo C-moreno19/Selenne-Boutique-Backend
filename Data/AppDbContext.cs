@@ -41,6 +41,7 @@ public class AppDbContext : DbContext
     public DbSet<Venta> Ventas { get; set; }
     public DbSet<VentaDetalle> VentaDetalles { get; set; }
     public DbSet<Cupon> Cupones { get; set; }
+    public DbSet<Suscriptor> Suscriptores { get; set; }
 
     // User features
     public DbSet<Favorito> Favoritos { get; set; }
