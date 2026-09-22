@@ -21,10 +21,10 @@ public class ConfigController : ControllerBase
     {
         return Ok(ApiResponse<object>.Ok(new
         {
-            banco        = _config["BankAccount:Banco"]        ?? "Bancolombia",
+            banco        = _config["BankAccount:Banco"]        ?? "Nequi",
             numeroCuenta = _config["BankAccount:NumeroCuenta"] ?? "",
-            titular      = _config["BankAccount:Titular"]      ?? "Selenne Boutique",
-            tipoCuenta   = _config["BankAccount:TipoCuenta"]   ?? "Ahorros",
+            titular      = _config["BankAccount:Titular"]      ?? "Cristian Cordoba",
+            tipoCuenta   = _config["BankAccount:TipoCuenta"]   ?? "Nequi",
             whatsapp     = _config["BankAccount:WhatsApp"]     ?? "",
         }));
     }
