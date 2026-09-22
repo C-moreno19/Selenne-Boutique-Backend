@@ -550,5 +550,80 @@ public class PedidosControllerTests : IDisposable
         Assert.Equal("Aprobado", pedidoActualizado!.Estado);
     }
 
+    /// <summary>
+    /// Prueba: no se puede marcar como "Devuelto" un pedido que nunca fue
+    /// entregado (ej. sigue "Pendiente") -- para eso existe Cancelar/Rechazar.
+    /// </summary>
+    [Fact]
+    public async Task UpdateEstado_DevueltoDesdeNoEntregado_RetornaBadRequest()
+    {
+        SetAnonymousUser();
+        await SeedPedidoAsync(pedidoId: 7, clienteId: 7);  // queda en "Pendiente"
+
+        var result = await _controller.UpdateEstado(7, new ActualizarEstadoPedidoDto
+        {
+            NuevoEstado = "Devuelto"
+        });
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<object>>(badRequest.Value);
+        Assert.Contains("entregado", response.Message, StringComparison.OrdinalIgnoreCase);
+
+        var pedido = await _db.Pedidos.FindAsync(7);
+        Assert.Equal("Pendiente", pedido!.Estado);  // no se tocó
+    }
+
+    /// <summary>
+    /// Prueba: marcar como "Devuelto" un pedido "Entregado" restaura el stock
+    /// que se había descontado al crearlo.
+    /// </summary>
+    [Fact]
+    public async Task UpdateEstado_DevueltoDesdeEntregado_RestauraStock()
+    {
+        SetAnonymousUser();
+        await SeedUsuarioAsync(id: 8, email: "devolucion@test.com");
+        var producto = await SeedProductoAsync(id: 40, precio: 60000m, stock: 3);  // ya se descontaron 2 al vender
+
+        var pedido = new Pedido
+        {
+            PedidoID = 8,
+            ClienteID = 8,
+            NombreCliente = "Cliente Devolucion",
+            EmailCliente = "devolucion@test.com",
+            TelefonoCliente = "3001234567",
+            DireccionEnvio = "Calle 1 # 2-3",
+            Ciudad = "Bogotá",
+            MetodoPago = "Efectivo",
+            Estado = "Entregado",
+        };
+        _db.Pedidos.Add(pedido);
+        await _db.SaveChangesAsync();
+        _db.PedidoDetalles.Add(new PedidoDetalle
+        {
+            PedidoID = 8, ProductoID = 40, Cantidad = 2, PrecioUnitario = 60000m, Subtotal = 120000m,
+        });
+        await _db.SaveChangesAsync();
+
+        _notifMock
+            .Setup(n => n.CreateAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<string?>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _controller.UpdateEstado(8, new ActualizarEstadoPedidoDto
+        {
+            NuevoEstado = "Devuelto",
+            Notas = "Talla incorrecta",
+        });
+
+        Assert.IsType<OkObjectResult>(result.Result);
+
+        var pedidoActualizado = await _db.Pedidos.FindAsync(8);
+        Assert.Equal("Devuelto", pedidoActualizado!.Estado);
+
+        var productoActualizado = await _db.Productos.FindAsync(40);
+        Assert.Equal(5, productoActualizado!.Stock);  // 3 + 2 restauradas
+    }
+
     public void Dispose() => _db.Dispose();
 }

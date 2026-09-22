@@ -357,13 +357,19 @@ public class PedidosController : ControllerBase
         var pedido = await _db.Pedidos.Include(p => p.Cliente).FirstOrDefaultAsync(p => p.PedidoID == id);
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
 
-        var estadosValidos = new[] { "Pendiente", "Aprobada", "Aprobado", "En proceso", "Enviado", "Entregado", "Cancelado", "Rechazada", "Rechazado", "Completada", "Completado" };
+        var estadosValidos = new[] { "Pendiente", "Aprobada", "Aprobado", "En proceso", "Enviado", "Entregado", "Cancelado", "Rechazada", "Rechazado", "Completada", "Completado", "Devuelto" };
         if (!estadosValidos.Contains(dto.NuevoEstado))
             return BadRequest(ApiResponse<object>.Fail("Estado invalido"));
 
+        // Una devolucion solo tiene sentido sobre un pedido que de verdad llego
+        // al cliente -- si nunca se entrego, lo correcto es cancelarlo/rechazarlo.
+        var estadosEntregados = new[] { "Entregado", "Completado", "Completada" };
+        if (dto.NuevoEstado == "Devuelto" && !estadosEntregados.Contains(pedido.Estado))
+            return BadRequest(ApiResponse<object>.Fail("Solo se puede marcar como devuelto un pedido ya entregado"));
+
         var estadosQueDescontanStock = new[] { "Aprobado", "Aprobada", "En proceso", "Enviado", "Entregado", "Completado", "Completada" };
-        var estadosCancelacion = new[] { "Cancelado", "Rechazado", "Rechazada" };
-        if (estadosCancelacion.Contains(dto.NuevoEstado) && estadosQueDescontanStock.Contains(pedido.Estado))
+        var estadosQueRestauranStock = new[] { "Cancelado", "Rechazado", "Rechazada", "Devuelto" };
+        if (estadosQueRestauranStock.Contains(dto.NuevoEstado) && estadosQueDescontanStock.Contains(pedido.Estado))
         {
             var detalles = await _db.PedidoDetalles.Where(d => d.PedidoID == id).ToListAsync();
             foreach (var det in detalles)
@@ -398,6 +404,7 @@ public class PedidosController : ControllerBase
                 "Rechazado"  => ("❌ Pedido rechazado",  "Tu pedido fue rechazado." + (string.IsNullOrEmpty(dto.Notas) ? "" : $" Motivo: {dto.Notas}"), "error"),
                 "Completado" => ("🎉 Pedido completado", "Tu pedido fue completado. ¡Gracias por tu compra!", "success"),
                 "Cancelado"  => ("Pedido cancelado",     "Tu pedido fue cancelado.", "warning"),
+                "Devuelto"   => ("↩️ Devolución registrada", "Registramos la devolución de tu pedido." + (string.IsNullOrEmpty(dto.Notas) ? "" : $" Motivo: {dto.Notas}"), "warning"),
                 _ => ("", "", "")
             };
             if (!string.IsNullOrEmpty(notif.titulo))
@@ -506,7 +513,7 @@ public class PedidosController : ControllerBase
         pedido.Transportadora = dto.Transportadora;
         pedido.FechaActualizacion = DateTime.UtcNow;
 
-        var estadosTerminales = new[] { "Entregado", "Cancelado", "Rechazado", "Rechazada", "Completado", "Completada" };
+        var estadosTerminales = new[] { "Entregado", "Cancelado", "Rechazado", "Rechazada", "Completado", "Completada", "Devuelto" };
         if (!estadosTerminales.Contains(pedido.Estado))
         {
             pedido.Estado = "Enviado";
@@ -580,7 +587,7 @@ public class PedidosController : ControllerBase
             return Ok(ApiResponse<object>.Ok(new { }, "Registro eliminado"));
         }
 
-        if (pedido.Estado == "Entregado" || pedido.Estado == "Completada" || pedido.Estado == "Completado")
+        if (pedido.Estado == "Entregado" || pedido.Estado == "Completada" || pedido.Estado == "Completado" || pedido.Estado == "Devuelto")
             return BadRequest(ApiResponse<object>.Fail("No se puede cancelar un pedido entregado"));
 
         pedido.Estado = "Cancelado";
