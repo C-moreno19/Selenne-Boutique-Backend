@@ -286,6 +286,97 @@ public class PedidosControllerTests : IDisposable
     }
 
     /// <summary>
+    /// Prueba: al comprar una talla/color especifico, se descuenta ESA variante
+    /// (no solo el total general) -- antes de este fix ProductoStockVariante
+    /// nunca se tocaba con las ventas y quedaba desincronizado.
+    /// </summary>
+    [Fact]
+    public async Task Create_ConTallaYColor_DescuentaLaVarianteEspecifica()
+    {
+        await SeedUsuarioAsync(id: 9, email: "variante@test.com");
+        var producto = await SeedProductoAsync(id: 50, precio: 70000m, stock: 20);
+        _db.Set<ProductoStockVariante>().AddRange(
+            new ProductoStockVariante { ProductoID = 50, TallaNombre = "M", ColorNombre = "Rojo", Stock = 3 },
+            new ProductoStockVariante { ProductoID = 50, TallaNombre = "M", ColorNombre = "Azul", Stock = 17 }
+        );
+        await _db.SaveChangesAsync();
+        SetAuthenticatedUser(userId: 9);
+
+        _notifMock
+            .Setup(n => n.CreateAsync(
+                It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<string?>()))
+            .Returns(Task.CompletedTask);
+
+        var dto = new CrearPedidoRequestDto
+        {
+            NombreCliente = "Compradora Variante",
+            EmailCliente = "variante@test.com",
+            TelefonoCliente = "3001112233",
+            DireccionEnvio = "Calle 2 # 3-4",
+            Ciudad = "Bogotá",
+            MetodoPago = "Efectivo",
+            Items = new List<PedidoItemDto>
+            {
+                new PedidoItemDto { ProductoID = 50, Cantidad = 2, TallaNombre = "M", ColorNombre = "Rojo" }
+            }
+        };
+
+        var result = await _controller.Create(dto);
+        Assert.IsType<CreatedAtActionResult>(result.Result);
+
+        var productoActualizado = await _db.Productos.FindAsync(50);
+        Assert.Equal(18, productoActualizado!.Stock);  // total: 20 - 2
+
+        var variantes = await _db.Set<ProductoStockVariante>().Where(v => v.ProductoID == 50).ToListAsync();
+        Assert.Equal(1, variantes.First(v => v.ColorNombre == "Rojo").Stock);   // 3 - 2
+        Assert.Equal(17, variantes.First(v => v.ColorNombre == "Azul").Stock); // intacta
+
+        var detalle = await _db.PedidoDetalles.FirstOrDefaultAsync(d => d.ProductoID == 50);
+        Assert.Equal("M", detalle!.TallaNombre);
+        Assert.Equal("Rojo", detalle.ColorNombre);
+    }
+
+    /// <summary>
+    /// Prueba: aunque el total general alcance, no se puede comprar mas de lo
+    /// que tiene disponible la variante especifica pedida.
+    /// </summary>
+    [Fact]
+    public async Task Create_ConStockDeVarianteInsuficiente_RetornaBadRequest()
+    {
+        await SeedUsuarioAsync(id: 10, email: "sinvariante@test.com");
+        await SeedProductoAsync(id: 51, precio: 40000m, stock: 20);  // total alto...
+        _db.Set<ProductoStockVariante>().Add(
+            new ProductoStockVariante { ProductoID = 51, TallaNombre = "S", ColorNombre = "Negro", Stock = 1 }  // ...pero esta variante casi no tiene
+        );
+        await _db.SaveChangesAsync();
+        SetAuthenticatedUser(userId: 10);
+
+        var dto = new CrearPedidoRequestDto
+        {
+            NombreCliente = "Compradora Sin Stock",
+            EmailCliente = "sinvariante@test.com",
+            TelefonoCliente = "3004445566",
+            DireccionEnvio = "Calle 3 # 4-5",
+            Ciudad = "Medellín",
+            MetodoPago = "Efectivo",
+            Items = new List<PedidoItemDto>
+            {
+                new PedidoItemDto { ProductoID = 51, Cantidad = 5, TallaNombre = "S", ColorNombre = "Negro" }
+            }
+        };
+
+        var result = await _controller.Create(dto);
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<object>>(badRequest.Value);
+        Assert.Contains("Stock insuficiente", response.Message);
+
+        var producto = await _db.Productos.FindAsync(51);
+        Assert.Equal(20, producto!.Stock);  // no se tocó
+    }
+
+    /// <summary>
     /// Prueba: un cupón de porcentaje válido descuenta el Total (no el Subtotal),
     /// queda registrado en el pedido, y su contador de usos se incrementa.
     /// </summary>

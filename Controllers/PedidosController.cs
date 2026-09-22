@@ -90,7 +90,8 @@ public class PedidosController : ControllerBase
             {
                 var prod = await _db.Productos.FindAsync(item.ProductoID);
                 if (prod == null) return BadRequest(ApiResponse<object>.Fail($"Producto {item.ProductoID} no encontrado"));
-                if (prod.Stock < item.Cantidad) return BadRequest(ApiResponse<object>.Fail($"Stock insuficiente para {prod.Nombre}"));
+                var errorStock = await ValidarStockDisponibleAsync(prod, item.Cantidad, item.TallaNombre, item.ColorNombre);
+                if (errorStock != null) return BadRequest(ApiResponse<object>.Fail(errorStock));
                 productosManual[item.ProductoID] = prod;
             }
 
@@ -140,12 +141,14 @@ public class PedidosController : ControllerBase
                         ProductoID = item.ProductoID,
                         TallaID = item.TallaID,
                         ColorID = item.ColorID,
+                        TallaNombre = item.TallaNombre,
+                        ColorNombre = item.ColorNombre,
                         Cantidad = item.Cantidad,
                         PrecioUnitario = precio,
                         Subtotal = precio * item.Cantidad
                     });
                     stockAntesManual.Add((prod, prod.Stock));
-                    prod.Stock -= item.Cantidad;
+                    await DescontarStockAsync(prod, item.Cantidad, item.TallaNombre, item.ColorNombre);
                     _db.StockMovimientos.Add(new StockMovimiento
                     {
                         ProductoID = item.ProductoID,
@@ -218,7 +221,7 @@ public class PedidosController : ControllerBase
         var emailC  = !string.IsNullOrWhiteSpace(dto.EmailCliente)  ? dto.EmailCliente  : usuario.Email;
         var telC    = !string.IsNullOrWhiteSpace(dto.TelefonoCliente) ? dto.TelefonoCliente : (usuario.Telefono ?? "");
 
-        var itemsCheckout = new List<(int ProdID, Producto Prod, int Cant, int? TallaID, int? ColorID)>();
+        var itemsCheckout = new List<(int ProdID, Producto Prod, int Cant, int? TallaID, int? ColorID, string? TallaNombre, string? ColorNombre)>();
         List<Carrito>? dbCart = null;
 
         if (dto.Items.Count > 0)
@@ -227,8 +230,9 @@ public class PedidosController : ControllerBase
             {
                 var prod = await _db.Productos.FindAsync(it.ProductoID);
                 if (prod == null) return BadRequest(ApiResponse<object>.Fail($"Producto {it.ProductoID} no encontrado"));
-                if (prod.Stock < it.Cantidad) return BadRequest(ApiResponse<object>.Fail($"Stock insuficiente para {prod.Nombre}"));
-                itemsCheckout.Add((it.ProductoID, prod, it.Cantidad, it.TallaID, it.ColorID));
+                var errorStock = await ValidarStockDisponibleAsync(prod, it.Cantidad, it.TallaNombre, it.ColorNombre);
+                if (errorStock != null) return BadRequest(ApiResponse<object>.Fail(errorStock));
+                itemsCheckout.Add((it.ProductoID, prod, it.Cantidad, it.TallaID, it.ColorID, it.TallaNombre, it.ColorNombre));
             }
         }
         else
@@ -237,9 +241,9 @@ public class PedidosController : ControllerBase
             if (!dbCart.Any()) return BadRequest(ApiResponse<object>.Fail("El carrito esta vacio"));
             foreach (var ci in dbCart)
             {
-                if (ci.Producto.Stock < ci.Cantidad)
-                    return BadRequest(ApiResponse<object>.Fail($"Stock insuficiente para {ci.Producto.Nombre}"));
-                itemsCheckout.Add((ci.ProductoID, ci.Producto, ci.Cantidad, null, null));
+                var errorStock = await ValidarStockDisponibleAsync(ci.Producto, ci.Cantidad, ci.TallaSeleccionada, ci.ColorSeleccionado);
+                if (errorStock != null) return BadRequest(ApiResponse<object>.Fail(errorStock));
+                itemsCheckout.Add((ci.ProductoID, ci.Producto, ci.Cantidad, null, null, ci.TallaSeleccionada, ci.ColorSeleccionado));
             }
         }
 
@@ -300,12 +304,14 @@ public class PedidosController : ControllerBase
                     ProductoID = it.ProdID,
                     TallaID = it.TallaID,
                     ColorID = it.ColorID,
+                    TallaNombre = it.TallaNombre,
+                    ColorNombre = it.ColorNombre,
                     Cantidad = it.Cant,
                     PrecioUnitario = precio,
                     Subtotal = precio * it.Cant
                 });
                 stockAntesCheckout.Add((it.Prod, it.Prod.Stock));
-                it.Prod.Stock -= it.Cant;
+                await DescontarStockAsync(it.Prod, it.Cant, it.TallaNombre, it.ColorNombre);
                 _db.StockMovimientos.Add(new StockMovimiento
                 {
                     ProductoID = it.ProdID,
@@ -375,7 +381,7 @@ public class PedidosController : ControllerBase
             foreach (var det in detalles)
             {
                 var prod = await _db.Productos.FindAsync(det.ProductoID);
-                if (prod != null) prod.Stock += det.Cantidad;
+                if (prod != null) await RestaurarStockAsync(prod, det.Cantidad, det.TallaNombre, det.ColorNombre);
             }
         }
 
@@ -599,6 +605,44 @@ public class PedidosController : ControllerBase
     // Avisa a los administradores solo cuando el stock de un producto CRUZA el umbral
     // en esta venta (antes estaba por encima, ahora quedó por debajo) — asi no se
     // manda una notificacion repetida por cada venta mientras el producto sigue bajo.
+    // El stock por talla/color (ProductoStockVariante) es solo un desglose informativo
+    // que el admin llena a mano -- nunca se movia con las ventas, asi que con el tiempo
+    // quedaba desincronizado del stock real y no evitaba vender de mas una combinacion
+    // especifica agotada. Estos dos helpers lo mantienen sincronizado con cada venta,
+    // cancelacion o devolucion, ademas del total (Producto.Stock) que ya se manejaba.
+    private async Task<ProductoStockVariante?> BuscarVarianteAsync(int productoId, string? tallaNombre, string? colorNombre)
+    {
+        if (string.IsNullOrWhiteSpace(tallaNombre)) return null;
+        var variantes = await _db.Set<ProductoStockVariante>().Where(v => v.ProductoID == productoId).ToListAsync();
+        if (!variantes.Any()) return null;
+        return variantes.FirstOrDefault(v =>
+            string.Equals((v.TallaNombre ?? "").Trim(), tallaNombre.Trim(), StringComparison.OrdinalIgnoreCase) &&
+            string.Equals((v.ColorNombre ?? "").Trim(), (colorNombre ?? "").Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task<string?> ValidarStockDisponibleAsync(Producto prod, int cantidad, string? tallaNombre, string? colorNombre)
+    {
+        if (prod.Stock < cantidad) return $"Stock insuficiente para {prod.Nombre}";
+        var variante = await BuscarVarianteAsync(prod.ProductoID, tallaNombre, colorNombre);
+        if (variante != null && variante.Stock < cantidad)
+            return $"Stock insuficiente para {prod.Nombre} (talla {tallaNombre}{(string.IsNullOrWhiteSpace(colorNombre) ? "" : $", color {colorNombre}")})";
+        return null;
+    }
+
+    private async Task DescontarStockAsync(Producto prod, int cantidad, string? tallaNombre, string? colorNombre)
+    {
+        var variante = await BuscarVarianteAsync(prod.ProductoID, tallaNombre, colorNombre);
+        if (variante != null) variante.Stock -= cantidad;
+        prod.Stock -= cantidad;
+    }
+
+    private async Task RestaurarStockAsync(Producto prod, int cantidad, string? tallaNombre, string? colorNombre)
+    {
+        var variante = await BuscarVarianteAsync(prod.ProductoID, tallaNombre, colorNombre);
+        if (variante != null) variante.Stock += cantidad;
+        prod.Stock += cantidad;
+    }
+
     private async Task NotificarStockBajoAsync(List<(Producto Prod, int StockAntes)> items)
     {
         var stockMinimo = _config.GetValue<int>("Inventario:StockMinimo", 5);
