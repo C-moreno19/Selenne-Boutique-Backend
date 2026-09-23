@@ -172,7 +172,7 @@ public class PedidosController : ControllerBase
 
             _ = _email.SendOrderConfirmationClienteAsync(pedidoManual.EmailCliente, pedidoManual.NombreCliente, pedidoManual.PedidoID, pedidoManual.Total);
             var adminEmailManual = _config["Email:FromEmail"];
-            if (!string.IsNullOrEmpty(adminEmailManual))
+            if (!string.IsNullOrEmpty(adminEmailManual) && await AdminQuiereCorreoNuevoPedidoAsync())
                 _ = _email.SendOrderConfirmationAdminAsync(adminEmailManual, pedidoManual.NombreCliente, pedidoManual.PedidoID, pedidoManual.Total);
             _ = NotificarStockBajoAsync(stockAntesManual);
 
@@ -348,7 +348,7 @@ public class PedidosController : ControllerBase
 
         _ = _email.SendOrderConfirmationClienteAsync(emailC, nombreC, pedido.PedidoID, pedido.Total);
         var adminEmail = _config["Email:FromEmail"];
-        if (!string.IsNullOrEmpty(adminEmail))
+        if (!string.IsNullOrEmpty(adminEmail) && await AdminQuiereCorreoNuevoPedidoAsync())
             _ = _email.SendOrderConfirmationAdminAsync(adminEmail, nombreC, pedido.PedidoID, pedido.Total);
         _ = NotificarStockBajoAsync(stockAntesCheckout);
 
@@ -636,6 +636,18 @@ public class PedidosController : ControllerBase
         var variante = await BuscarVarianteAsync(prod.ProductoID, tallaNombre, colorNombre);
         if (variante != null) variante.Stock -= cantidad;
         prod.Stock -= cantidad;
+    }
+
+    // El correo de "nuevo pedido" al buzón admin se omite solo si TODAS las
+    // cuentas con rol Administrador apagaron sus notificaciones por correo
+    // desde su perfil. Si ninguna cuenta admin existe (o hay alguna que sí
+    // quiere el aviso), se envía igual — comportamiento anterior por defecto.
+    private async Task<bool> AdminQuiereCorreoNuevoPedidoAsync()
+    {
+        var admins = await _db.Usuarios
+            .Where(u => u.Estado == "activo" && u.Rol != null && u.Rol.Nombre == "Administrador")
+            .ToListAsync();
+        return admins.Count == 0 || admins.Any(u => u.NotificacionesEmail);
     }
 
     private async Task RestaurarStockAsync(Producto prod, int cantidad, string? tallaNombre, string? colorNombre)
