@@ -174,6 +174,7 @@ public class PedidosController : ControllerBase
             var adminEmailManual = _config["Email:FromEmail"];
             if (!string.IsNullOrEmpty(adminEmailManual) && await AdminQuiereCorreoNuevoPedidoAsync())
                 _ = _email.SendOrderConfirmationAdminAsync(adminEmailManual, pedidoManual.NombreCliente, pedidoManual.PedidoID, pedidoManual.Total);
+            _ = NotificarAdminsNuevoPedidoAsync(pedidoManual.PedidoID, pedidoManual.NombreCliente, pedidoManual.Total);
             _ = NotificarStockBajoAsync(stockAntesManual);
 
             return CreatedAtAction(nameof(GetById), new { id = pedidoManual.PedidoID },
@@ -350,6 +351,7 @@ public class PedidosController : ControllerBase
         var adminEmail = _config["Email:FromEmail"];
         if (!string.IsNullOrEmpty(adminEmail) && await AdminQuiereCorreoNuevoPedidoAsync())
             _ = _email.SendOrderConfirmationAdminAsync(adminEmail, nombreC, pedido.PedidoID, pedido.Total);
+        _ = NotificarAdminsNuevoPedidoAsync(pedido.PedidoID, nombreC, pedido.Total);
         _ = NotificarStockBajoAsync(stockAntesCheckout);
 
         return CreatedAtAction(nameof(GetById), new { id = pedido.PedidoID },
@@ -667,23 +669,18 @@ public class PedidosController : ControllerBase
             .ToList();
         if (!productosBajos.Any()) return;
 
-        var adminIds = await _db.Usuarios
-            .Where(u => u.Estado == "activo" && (
-                (u.Rol != null && u.Rol.Nombre == "Administrador") ||
-                _db.RolePermissions.Any(rp => rp.RoleID == u.RoleID && rp.Permission.Nombre == "productos:editar")))
-            .Select(u => u.UsuarioID)
-            .Distinct()
-            .ToListAsync();
-        if (!adminIds.Any()) return;
-
         foreach (var prod in productosBajos)
         {
             var mensaje = prod.Stock <= 0
                 ? $"\"{prod.Nombre}\" se agotó."
                 : $"\"{prod.Nombre}\" tiene stock bajo: quedan {prod.Stock} unidades.";
-            await _notif.CreateBulkAsync(adminIds, "Stock bajo", mensaje, "warning");
+            await _notif.CreateForPermissionAsync("productos:editar", "Stock bajo", mensaje, "warning", $"producto-{prod.ProductoID}");
         }
     }
+
+    private Task NotificarAdminsNuevoPedidoAsync(int pedidoId, string nombreCliente, decimal total) =>
+        _notif.CreateForPermissionAsync("pedidos:ver", "🛍️ Nuevo pedido",
+            $"{nombreCliente} hizo un pedido por ${total:N0}.", "info", $"pedido-{pedidoId}");
 
     private static PedidoDto MapToDto(Pedido p) => new()
     {

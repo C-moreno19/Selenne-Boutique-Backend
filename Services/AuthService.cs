@@ -54,6 +54,9 @@ public class AuthService : IAuthService
             await _email.SendVerificationEmailAsync(usuario.Email, usuario.NombreCompleto, vToken);
         });
 
+        _ = _notif.CreateForPermissionAsync("usuarios:ver", "🆕 Nuevo usuario registrado",
+            $"{usuario.NombreCompleto} ({usuario.Email}) creó una cuenta.", "info", $"usuario-{usuario.UsuarioID}");
+
         return await BuildTokenResponse(usuario, ip);
     }
 

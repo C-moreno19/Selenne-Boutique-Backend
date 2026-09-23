@@ -56,6 +56,23 @@ public class NotificationService : INotificationService
         await context.SaveChangesAsync();
     }
 
+    public async Task CreateForPermissionAsync(string permiso, string titulo, string mensaje, string tipo = "info", string? referencia = null)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userIds = await context.Usuarios
+            .Where(u => u.Estado == "activo" && (
+                (u.Rol != null && u.Rol.Nombre == "Administrador") ||
+                context.RolePermissions.Any(rp => rp.RoleID == u.RoleID && rp.Permission.Nombre == permiso)))
+            .Select(u => u.UsuarioID)
+            .Distinct()
+            .ToListAsync();
+        if (!userIds.Any()) return;
+        foreach (var id in userIds)
+            context.Notificaciones.Add(new Notificacion { UsuarioID = id, Titulo = titulo, Mensaje = mensaje, Tipo = tipo, Referencia = referencia });
+        await context.SaveChangesAsync();
+    }
+
     public async Task MarkAsReadAsync(int notificacionId, int usuarioId)
     {
         using var scope = _scopeFactory.CreateScope();
