@@ -394,12 +394,11 @@ public class PedidosController : ControllerBase
         pedido.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        if (dto.NuevoEstado == "Aprobado" && !string.IsNullOrEmpty(pedido.EmailCliente))
-        {
-            var cliente = pedido.ClienteID > 0 ? await _db.Usuarios.FindAsync(pedido.ClienteID) : null;
-            if (cliente == null || cliente.NotificacionesEmail)
-                _ = _email.SendOrderApprovedAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, pedido.Total);
-        }
+        var clienteParaEmail = pedido.ClienteID > 0 ? await _db.Usuarios.FindAsync(pedido.ClienteID) : null;
+        var emailsHabilitados = clienteParaEmail == null || clienteParaEmail.NotificacionesEmail;
+
+        if (dto.NuevoEstado == "Aprobado" && !string.IsNullOrEmpty(pedido.EmailCliente) && emailsHabilitados)
+            _ = _email.SendOrderApprovedAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, pedido.Total);
 
         var cid = pedido.ClienteID;
         if (cid > 0)
@@ -417,7 +416,10 @@ public class PedidosController : ControllerBase
                 _ = _notif.CreateAsync(cid, notif.titulo, notif.mensaje, notif.tipo, $"pedido-{pedido.PedidoID}");
         }
 
-        _ = _email.SendOrderStatusUpdateAsync(pedido.EmailCliente, pedido.NombreCliente, id, dto.NuevoEstado, dto.Notas);
+        // "Aprobado" ya envía su propio correo (SendOrderApprovedAsync) más arriba;
+        // evitamos que el cliente reciba dos correos distintos para el mismo cambio de estado.
+        if (dto.NuevoEstado != "Aprobado" && !string.IsNullOrEmpty(pedido.EmailCliente) && emailsHabilitados)
+            _ = _email.SendOrderStatusUpdateAsync(pedido.EmailCliente, pedido.NombreCliente, id, dto.NuevoEstado, dto.Notas);
         return Ok(ApiResponse<object>.Ok(new { estado = dto.NuevoEstado }, "Estado actualizado"));
     }
 

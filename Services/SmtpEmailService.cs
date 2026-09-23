@@ -191,7 +191,7 @@ public class SmtpEmailService : IEmailService
             (string.IsNullOrWhiteSpace(mensaje) ? "" : "<div style='background:#fef9c3;border-left:3px solid #eab308;padding:12px 16px;margin:0 0 16px'><p style='margin:0;font-size:13px;color:#374151'>" + mensaje + "</p></div>") +
             "<table style='width:100%;border-collapse:collapse;margin:0 0 16px'>" +
             "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af;width:40%'>Banco</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:13px;font-weight:600'>" + banco + "</td></tr>" +
-            "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Número de cuenta</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:15px;font-weight:700;color:#d65391'>" + cuenta + "</td></tr>" +
+            "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Llave Bre-B</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:15px;font-weight:700;color:#d65391'>" + cuenta + "<br/><span style='font-size:11px;font-weight:400;color:#9ca3af'>Pégala en la opción \"Bre-B\" / \"Llave\" de tu app bancaria, no es un número de celular</span></td></tr>" +
             "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Titular</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:13px;font-weight:600'>" + titular + "</td></tr>" +
             "<tr><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:12px;color:#9ca3af'>Tipo</td><td style='padding:9px 12px;border:1px solid #e5e7eb;font-size:13px;font-weight:600'>" + tipoCuenta + "</td></tr>" +
             "</table>" +
