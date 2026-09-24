@@ -36,6 +36,17 @@ public class ActualizarCuponDto
     public bool? Activo { get; set; }
 }
 
+// Version publica de un cupon activo — sin datos internos de uso, para
+// mostrar en la tienda (banner de la home, etc.) sin necesitar sesion.
+public class CuponPublicoDto
+{
+    public string Codigo { get; set; } = string.Empty;
+    public string TipoDescuento { get; set; } = string.Empty;
+    public decimal ValorDescuento { get; set; }
+    public decimal? MontoMinimo { get; set; }
+    public DateTime? FechaExpiracion { get; set; }
+}
+
 public class ValidarCuponDto
 {
     public string Codigo { get; set; } = string.Empty;

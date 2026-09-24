@@ -41,6 +41,32 @@ public class CuponesController : ControllerBase
         }));
     }
 
+    // GET /api/cupones/publicos — publico, lo usa la tienda para anunciar
+    // cupones vigentes (banner de la home) sin exponer datos internos de uso.
+    [HttpGet("publicos")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<List<CuponPublicoDto>>>> GetPublicos()
+    {
+        var ahora = DateTime.UtcNow;
+        var cupones = await _db.Cupones
+            .Where(c => c.Activo
+                && (c.FechaInicio == null || c.FechaInicio <= ahora)
+                && (c.FechaExpiracion == null || c.FechaExpiracion >= ahora)
+                && (c.UsosMaximos == null || c.UsosActuales < c.UsosMaximos))
+            .OrderByDescending(c => c.FechaCreacion)
+            .Select(c => new CuponPublicoDto
+            {
+                Codigo = c.Codigo,
+                TipoDescuento = c.TipoDescuento,
+                ValorDescuento = c.ValorDescuento,
+                MontoMinimo = c.MontoMinimo,
+                FechaExpiracion = c.FechaExpiracion
+            })
+            .ToListAsync();
+
+        return Ok(ApiResponse<List<CuponPublicoDto>>.Ok(cupones));
+    }
+
     [HttpGet, Authorize]
     public async Task<ActionResult<ApiResponse<List<CuponDto>>>> GetAll()
     {
