@@ -264,7 +264,7 @@ public class ProductosController : ControllerBase
     {
         var stockMinimo = _config.GetValue<int>("Inventario:StockMinimo", 5);
         var stockTotal = (p.StockVariantes == null || !p.StockVariantes.Any()) ? p.Stock : p.StockVariantes.Sum(v => v.Stock);
-        var valoracionesAprobadas = p.Valoraciones?.Where(v => v.Estado == "aprobado").ToList() ?? new();
+        var valoracionesAprobadas = p.Valoraciones?.Where(v => v.Estado == "aprobada").ToList() ?? new();
         return new()
     {
         ProductoID = p.ProductoID,
