@@ -112,6 +112,17 @@ public class AdminValoracionesController : ControllerBase
     private readonly AppDbContext _db;
     public AdminValoracionesController(AppDbContext db) { _db = db; }
 
+    // TEMPORAL: solo para diagnosticar CK_Valoraciones_Estado, se quita despues.
+    [HttpGet("debug-constraint")]
+    public async Task<IActionResult> DebugConstraint()
+    {
+        if (!PermissionHelper.HasPermission(User, "productos:editar")) return Forbid();
+        var result = await _db.Database
+            .SqlQueryRaw<string>("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = 'CK_Valoraciones_Estado'")
+            .ToListAsync();
+        return Ok(new { success = true, data = result });
+    }
+
     [HttpGet]
     public async Task<ActionResult<ApiResponse<List<ValoracionDto>>>> GetAll([FromQuery] string? estado)
     {
