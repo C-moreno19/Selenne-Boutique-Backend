@@ -51,7 +51,7 @@ public class ErrorHandlingMiddleware
                 {
                     PostgresErrorCodes.UniqueViolation => MensajeDeDuplicado(pgEx.ConstraintName),
                     PostgresErrorCodes.ForeignKeyViolation => "No se puede realizar esta operación porque el registro está siendo utilizado en otras partes del sistema (pedidos, ventas, compras u otros módulos).",
-                    _ => "Error al guardar en la base de datos.",
+                    _ => $"[DEBUG-TEMP] {pgEx.SqlState} | {pgEx.MessageText} | constraint={pgEx.ConstraintName} | column={pgEx.ColumnName} | table={pgEx.TableName}",
                 };
             }
             else
