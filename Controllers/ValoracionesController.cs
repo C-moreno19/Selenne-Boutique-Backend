@@ -51,13 +51,13 @@ public class ValoracionesController : ControllerBase
         var producto = await _db.Productos.FindAsync(dto.ProductoID);
         if (producto == null) return NotFound(ApiResponse<object>.Fail("Producto no encontrado"));
 
+        // Cualquier usuario logueado puede reseñar — no hace falta haber comprado.
+        // Se sigue verificando la compra solo para mostrar el sello "Compra verificada".
         var compro = await _db.PedidoDetalles
             .Include(d => d.Pedido)
             .AnyAsync(d => d.ProductoID == dto.ProductoID
                 && d.Pedido!.ClienteID == userId
                 && EstadosCompraVerificada.Contains(d.Pedido.Estado));
-        if (!compro)
-            return BadRequest(ApiResponse<object>.Fail("Solo puedes reseñar productos que hayas comprado"));
 
         var yaReseño = await _db.Valoraciones.AnyAsync(v => v.ProductoID == dto.ProductoID && v.UsuarioID == userId);
         if (yaReseño)
@@ -69,7 +69,7 @@ public class ValoracionesController : ControllerBase
             UsuarioID = userId,
             Puntuacion = dto.Puntuacion,
             Comentario = dto.Comentario,
-            VerificadoCompra = true,
+            VerificadoCompra = compro,
             Estado = "pendiente",
             FechaCreacion = DateTime.UtcNow
         };
