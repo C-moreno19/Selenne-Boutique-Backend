@@ -16,5 +16,5 @@ public class CreateUsuarioRequestDto
     public string? Direccion { get; set; }
     public string? Ciudad { get; set; }
     public string? Estado { get; set; }
-    public int RoleID { get; set; }
+    public int? RoleID { get; set; }
 }
