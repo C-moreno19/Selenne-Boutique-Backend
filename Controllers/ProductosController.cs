@@ -129,6 +129,7 @@ public class ProductosController : ControllerBase
             var carritoItems = _db.Carrito.Where(c => c.ProductoID == id);
             _db.Carrito.RemoveRange(carritoItems);
             _db.Favoritos.RemoveRange(_db.Favoritos.Where(x => x.ProductoID == id));
+            _db.Valoraciones.RemoveRange(_db.Valoraciones.Where(x => x.ProductoID == id));
             _db.Productos.Remove(p);
             await _db.SaveChangesAsync();
             return Ok(ApiResponse<object>.Ok(null, "Eliminado"));
