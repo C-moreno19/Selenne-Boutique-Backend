@@ -52,11 +52,17 @@ public class ProductosController : ControllerBase
     {
         var uid = User.GetUserId();
         if (!await _perms.HasPermissionAsync(uid, "productos:crear")) return Forbid();
-        if (await _db.Productos.AnyAsync(p => p.Codigo.ToLower() == dto.Codigo.ToLower()))
+        // El código es opcional: si no se da uno, se genera uno interno único
+        // en vez de dejarlo vacío (varios productos con Codigo="" chocarían
+        // entre sí en la validación de duplicados).
+        var codigo = string.IsNullOrWhiteSpace(dto.Codigo)
+            ? $"SKU-{DateTime.UtcNow:yyMMddHHmmss}{Random.Shared.Next(10, 99)}"
+            : dto.Codigo.Trim();
+        if (await _db.Productos.AnyAsync(p => p.Codigo.ToLower() == codigo.ToLower()))
             return BadRequest(ApiResponse<object>.Fail("El código ya existe. Usa un código diferente."));
         var prod = new Producto
         {
-            Codigo = dto.Codigo,
+            Codigo = codigo,
             Nombre = dto.Nombre,
             Descripcion = dto.Descripcion,
             DescripcionCorta = dto.DescripcionCorta,
