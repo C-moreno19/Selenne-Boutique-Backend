@@ -4,8 +4,9 @@ namespace SelenneApi.Models.DTOs.Productos;
 
 public class CreateProductoRequestDto
 {
-    [Required, MaxLength(50)]
-    public string Codigo { get; set; } = string.Empty;
+    // Opcional: si no se da uno, el controller genera un código interno único.
+    [MaxLength(50)]
+    public string? Codigo { get; set; }
 
     [Required, MaxLength(200)]
     public string Nombre { get; set; } = string.Empty;
