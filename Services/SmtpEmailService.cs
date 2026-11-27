@@ -14,8 +14,11 @@ public class SmtpEmailService : IEmailService
 
     private static string Ref(int pedidoId) => $"DS-{pedidoId + 10000}";
 
-    private async Task SendAsync(string to, string subject, string body,
-        byte[]? inlineImageBytes = null, string? inlineImageMime = null, string inlineCid = "paquete_district")
+    // Nota: las imagenes del correo (foto del paquete, QR) se referencian por URL
+    // publica (wwwroot servido como estatico), no como adjunto inline con cid —
+    // Brevo/Gmail muestran el adjunto inline ADEMAS de la imagen embebida, lo que
+    // hacia que la foto llegara duplicada (una vez en el cuerpo, otra como archivo).
+    private async Task SendAsync(string to, string subject, string body)
     {
         try
         {
@@ -23,37 +26,13 @@ public class SmtpEmailService : IEmailService
             var fromEmail = _config["Email:FromEmail"] ?? "noreply@districtstore.com";
             var fromName = _config["Email:FromName"] ?? "District Store";
 
-            object payload;
-            if (inlineImageBytes != null && inlineImageBytes.Length > 0)
+            object payload = new
             {
-                payload = new
-                {
-                    sender = new { name = fromName, email = fromEmail },
-                    to = new[] { new { email = to } },
-                    subject,
-                    htmlContent = body,
-                    attachment = new[]
-                    {
-                        new
-                        {
-                            content = Convert.ToBase64String(inlineImageBytes),
-                            name = "image.jpg",
-                            contentType = inlineImageMime ?? "image/jpeg",
-                            contentId = inlineCid
-                        }
-                    }
-                };
-            }
-            else
-            {
-                payload = new
-                {
-                    sender = new { name = fromName, email = fromEmail },
-                    to = new[] { new { email = to } },
-                    subject,
-                    htmlContent = body
-                };
-            }
+                sender = new { name = fromName, email = fromEmail },
+                to = new[] { new { email = to } },
+                subject,
+                htmlContent = body
+            };
 
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
             request.Headers.Add("api-key", apiKey);
@@ -182,9 +161,9 @@ public class SmtpEmailService : IEmailService
         var waUrl = $"https://wa.me/{whatsapp}?text={waText}";
 
         var qrPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "qr-transferencia.png");
-        byte[]? qrBytes = System.IO.File.Exists(qrPath) ? await System.IO.File.ReadAllBytesAsync(qrPath) : null;
-        var qrImg = qrBytes != null
-            ? "<img src='cid:qr_district' alt='Código QR para transferencia' style='border:1px solid #E7E0DA;padding:4px;max-width:200px' />"
+        var baseUrl = (_config["AppSettings:BaseUrl"] ?? "").TrimEnd('/');
+        var qrImg = System.IO.File.Exists(qrPath) && !string.IsNullOrEmpty(baseUrl)
+            ? "<img src='" + baseUrl + "/qr-transferencia.png' alt='Código QR para transferencia' style='border:1px solid #E7E0DA;padding:4px;max-width:200px' />"
             : "";
 
         var waSection = string.IsNullOrEmpty(whatsapp) ? "" :
@@ -209,12 +188,12 @@ public class SmtpEmailService : IEmailService
             "<p style='margin:0 0 8px;font-size:12px;color:#a89ca2'>O escanea el código QR con los datos bancarios:</p>" +
             qrImg + "</div>" : "") +
             waSection;
-        await SendAsync(to, "Información de pago — District Store", Card(content), qrBytes, "image/png", "qr_district");
+        await SendAsync(to, "Información de pago — District Store", Card(content));
     }
 
-    public async Task SendShippingNotificationEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, byte[]? fotoBytes = null, string? fotoMimeType = null, string? confirmarUrl = null)
+    public async Task SendShippingNotificationEmailAsync(string to, string nombre, int pedidoId, string? numeroGuia, string? transportadora, string? fotoUrl = null, string? confirmarUrl = null)
     {
-        var hasPhoto = fotoBytes != null && fotoBytes.Length > 0;
+        var hasPhoto = !string.IsNullOrEmpty(fotoUrl);
         var content =
             Header("¡Ya va en camino! 🚚") +
             "<p style='margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6'>Hola <strong>" + nombre + "</strong>, tu pedido salió de nuestras manos y va directo a las tuyas.</p>" +
@@ -227,7 +206,7 @@ public class SmtpEmailService : IEmailService
             (hasPhoto ?
                 "<div style='margin:0 0 16px'>" +
                 "<p style='margin:0 0 8px;font-size:11px;color:#a89ca2;text-transform:uppercase;letter-spacing:1.5px'>Foto del paquete</p>" +
-                "<img src='cid:paquete_district' alt='Paquete despachado' style='width:100%;max-width:100%;border:1px solid #E7E0DA;display:block' />" +
+                "<img src='" + fotoUrl + "' alt='Paquete despachado' style='width:100%;max-width:100%;border:1px solid #E7E0DA;display:block' />" +
                 "</div>" : "") +
             (string.IsNullOrEmpty(confirmarUrl) ? "" :
                 "<div style='background:#F7F5FC;border:1px solid #E7E0DA;padding:20px;margin:0 0 4px;text-align:center'>" +
@@ -235,8 +214,7 @@ public class SmtpEmailService : IEmailService
                 "<p style='margin:0 0 16px;font-size:12px;color:#a89ca2'>Confirma la entrega cuando lo tengas en tus manos.</p>" +
                 "<a href='" + confirmarUrl + "' style='display:inline-block;" + Gradient + ";color:white;padding:12px 32px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.3px'>Confirmar recepción</a>" +
                 "</div>");
-        await SendAsync(to, "Tu pedido va en camino — District Store", Card(content),
-            hasPhoto ? fotoBytes : null, fotoMimeType);
+        await SendAsync(to, "Tu pedido va en camino — District Store", Card(content));
     }
 
     public async Task SendOrderApprovedAsync(string to, string nombre, int pedidoId, decimal total) =>

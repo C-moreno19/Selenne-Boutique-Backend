@@ -430,48 +430,48 @@ public class PedidosController : ControllerBase
     public async Task<IActionResult> ConfirmarEntrega(string token)
     {
         string PageHtml(string titulo, string tituloColor, string icono, string mensaje, string subMensaje = "") =>
-            "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Selenne Boutique</title>" +
+            "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>District Store</title>" +
             "<style>" +
             "*{margin:0;padding:0;box-sizing:border-box}" +
-            "body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:linear-gradient(145deg,#fce7f3 0%,#fff0f7 50%,#fdf2f8 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}" +
-            ".card{background:white;border-radius:24px;box-shadow:0 24px 64px rgba(214,83,145,.18);max-width:460px;width:100%;overflow:hidden;text-align:center}" +
-            ".header{background:linear-gradient(135deg,#c94f87 0%,#d65391 50%,#e8709f 100%);padding:36px 32px 32px;position:relative}" +
+            "body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#F5F3FA;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}" +
+            ".card{background:white;border:1px solid #E7E0DA;box-shadow:0 24px 64px rgba(10,10,10,.12);max-width:460px;width:100%;overflow:hidden;text-align:center}" +
+            ".header{background:linear-gradient(90deg,#0A0A0A 0%,#3B0A45 55%,#5C2A52 100%);padding:36px 32px 32px;position:relative}" +
             ".header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:rgba(255,255,255,.15)}" +
-            ".brand-tag{color:rgba(255,255,255,.6);font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}" +
-            ".header h1{color:white;font-size:24px;font-weight:700;letter-spacing:.5px}" +
+            ".brand-tag{color:#C9A8C3;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}" +
+            ".header h1{color:white;font-size:24px;font-weight:700;letter-spacing:.3px;font-family:Georgia,'Times New Roman',serif}" +
             ".header p{color:rgba(255,255,255,.75);font-size:13px;margin-top:5px;font-weight:400}" +
             ".body{padding:44px 36px 36px}" +
-            ".icon-wrap{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#fce7f3,#fdf2f8);border:2px solid #fce7f3;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:40px}" +
-            ".titulo{font-size:20px;font-weight:700;color:" + tituloColor + ";margin-bottom:14px;letter-spacing:-.3px}" +
+            ".icon-wrap{width:80px;height:80px;border-radius:50%;background:#F7F5FC;border:2px solid #E7E0DA;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:40px}" +
+            ".titulo{font-size:20px;font-weight:700;color:" + tituloColor + ";margin-bottom:14px;letter-spacing:-.3px;font-family:Georgia,'Times New Roman',serif}" +
             ".mensaje{color:#374151;font-size:15px;line-height:1.65;margin-bottom:4px}" +
-            ".sub{color:#9ca3af;font-size:13px;margin-top:16px;line-height:1.5}" +
-            ".divider{width:40px;height:3px;background:linear-gradient(90deg,#d65391,#f8a9c5);border-radius:2px;margin:24px auto 0}" +
-            ".footer{background:#fdf2f8;padding:18px 32px;border-top:1px solid #fce7f3;display:flex;align-items:center;justify-content:center;gap:8px}" +
-            ".footer-dot{width:4px;height:4px;border-radius:50%;background:#f9a8d4}" +
-            ".footer p{color:#d65391;font-size:12px;font-weight:600;letter-spacing:.5px}" +
+            ".sub{color:#a89ca2;font-size:13px;margin-top:16px;line-height:1.5}" +
+            ".divider{width:40px;height:3px;background:#5C2A52;margin:24px auto 0}" +
+            ".footer{background:#F5F3FA;padding:18px 32px;border-top:1px solid #E7E0DA;display:flex;align-items:center;justify-content:center;gap:8px}" +
+            ".footer-dot{width:4px;height:4px;border-radius:50%;background:#C9A8C3}" +
+            ".footer p{color:#5C2A52;font-size:12px;font-weight:600;letter-spacing:.5px}" +
             "</style></head>" +
             "<body><div class='card'>" +
-            "<div class='header'><p class='brand-tag'>Selenne Boutique</p><h1>Selenne Boutique</h1><p>Moda con estilo</p></div>" +
+            "<div class='header'><p class='brand-tag'>District Store</p><h1>District Store</h1><p>Streetwear y esenciales para hombre y mujer</p></div>" +
             "<div class='body'><div class='icon-wrap'>" + icono + "</div>" +
             "<p class='titulo'>" + titulo + "</p><p class='mensaje'>" + mensaje + "</p>" +
             (subMensaje != "" ? "<p class='sub'>" + subMensaje + "</p>" : "") +
             "<div class='divider'></div></div>" +
-            "<div class='footer'><div class='footer-dot'></div><p>selenneboutique.com</p><div class='footer-dot'></div></div>" +
+            "<div class='footer'><div class='footer-dot'></div><p>districtstore.com</p><div class='footer-dot'></div></div>" +
             "</div></body></html>";
 
         var pedido = await _db.Pedidos.FirstOrDefaultAsync(p => p.ConfirmacionToken == token);
         if (pedido == null)
-            return Content(PageHtml("Enlace no válido", "#dc2626", "❌", "Este enlace es inválido o ya fue utilizado anteriormente.", "Si crees que es un error, contacta a Selenne Boutique."), "text/html; charset=utf-8");
+            return Content(PageHtml("Enlace no válido", "#dc2626", "❌", "Este enlace es inválido o ya fue utilizado anteriormente.", "Si crees que es un error, contacta a District Store."), "text/html; charset=utf-8");
 
         if (pedido.Estado == "Completado")
-            return Content(PageHtml("Pedido ya confirmado", "#d65391", "✅", "Tu pedido ya fue marcado como completado. ¡Gracias por tu compra!", "Esperamos verte pronto de nuevo."), "text/html; charset=utf-8");
+            return Content(PageHtml("Pedido ya confirmado", "#5C2A52", "✅", "Tu pedido ya fue marcado como completado. ¡Gracias por tu compra!", "Esperamos verte pronto de nuevo."), "text/html; charset=utf-8");
 
         pedido.Estado = "Completado";
         pedido.FechaEntrega = DateTime.UtcNow;
         pedido.FechaActualizacion = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return Content(PageHtml("¡Recepción confirmada!", "#d65391", "🎉", "Gracias <strong>" + pedido.NombreCliente + "</strong>, tu pedido ha sido marcado como completado.", "¡Esperamos que disfrutes tu compra. Vuelve pronto!"), "text/html; charset=utf-8");
+        return Content(PageHtml("¡Recepción confirmada!", "#5C2A52", "🎉", "Gracias <strong>" + pedido.NombreCliente + "</strong>, tu pedido ha sido marcado como completado.", "¡Esperamos que disfrutes tu compra. Vuelve pronto!"), "text/html; charset=utf-8");
     }
 
     [HttpPost("{id}/email-pago")]
@@ -484,7 +484,7 @@ public class PedidosController : ControllerBase
 
         var banco = _config["BankAccount:Banco"] ?? "Banco XYZ";
         var cuenta = _config["BankAccount:NumeroCuenta"] ?? "1234567890";
-        var titular = _config["BankAccount:Titular"] ?? "Selenne Boutique";
+        var titular = _config["BankAccount:Titular"] ?? "District Store";
         var tipoCuenta = _config["BankAccount:TipoCuenta"] ?? "Ahorros";
         _ = _email.SendPendingPaymentEmailAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, pedido.Total, dto.Mensaje ?? "", banco, cuenta, titular, tipoCuenta);
 
@@ -503,20 +503,18 @@ public class PedidosController : ControllerBase
         if (pedido == null) return NotFound(ApiResponse<object>.Fail("Pedido no encontrado"));
         if (string.IsNullOrEmpty(pedido.EmailCliente)) return BadRequest(ApiResponse<object>.Fail("El pedido no tiene email"));
 
-        byte[]? fotoBytes = null;
-        string? fotoMimeType = null;
+        string? fotoFileName = null;
         if (dto.Foto != null && dto.Foto.Length > 0)
         {
             using var ms = new MemoryStream();
             await dto.Foto.CopyToAsync(ms);
-            fotoBytes = ms.ToArray();
-            fotoMimeType = dto.Foto.ContentType ?? "image/jpeg";
+            var fotoBytes = ms.ToArray();
 
             var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
             var ext = Path.GetExtension(dto.Foto.FileName);
-            var fileName = $"guia_{id}_{Guid.NewGuid():N}{ext}";
-            await System.IO.File.WriteAllBytesAsync(Path.Combine(uploadsPath, fileName), fotoBytes);
+            fotoFileName = $"guia_{id}_{Guid.NewGuid():N}{ext}";
+            await System.IO.File.WriteAllBytesAsync(Path.Combine(uploadsPath, fotoFileName), fotoBytes);
         }
 
         pedido.NumeroGuia = dto.NumeroGuia;
@@ -537,8 +535,9 @@ public class PedidosController : ControllerBase
 
         var baseUrlConfirm = _config["AppSettings:BaseUrl"] ?? "http://localhost:5000";
         var confirmarUrl = $"{baseUrlConfirm}/api/pedidos/confirmar/{pedido.ConfirmacionToken}";
+        var fotoUrl = fotoFileName != null ? $"{baseUrlConfirm}/uploads/{fotoFileName}" : null;
 
-        _ = _email.SendShippingNotificationEmailAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, dto.NumeroGuia, dto.Transportadora, fotoBytes, fotoMimeType, confirmarUrl);
+        _ = _email.SendShippingNotificationEmailAsync(pedido.EmailCliente, pedido.NombreCliente, pedido.PedidoID, dto.NumeroGuia, dto.Transportadora, fotoUrl, confirmarUrl);
 
         var guiaMensaje = string.IsNullOrEmpty(dto.NumeroGuia)
             ? $"Tu pedido ha sido despachado y está en camino."
