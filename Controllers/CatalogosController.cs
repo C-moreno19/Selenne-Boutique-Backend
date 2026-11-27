@@ -381,7 +381,7 @@ public class TiposProductoController : ControllerBase
     {
         if (await _db.TiposProducto.AnyAsync(t => t.Nombre == dto.Nombre))
             return BadRequest(ApiResponse<object>.Fail("Ya existe un tipo con ese nombre"));
-        var item = new TipoProducto { Nombre = dto.Nombre, Estado = "activo", CategoriasAplicables = dto.CategoriasAplicables };
+        var item = new TipoProducto { Nombre = dto.Nombre, Estado = "activo", CategoriasAplicables = dto.CategoriasAplicables, SinVariantes = dto.SinVariantes };
         _db.TiposProducto.Add(item);
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -395,6 +395,7 @@ public class TiposProductoController : ControllerBase
         item.Nombre = dto.Nombre;
         if (dto.Estado != null) item.Estado = dto.Estado;
         item.CategoriasAplicables = dto.CategoriasAplicables;
+        item.SinVariantes = dto.SinVariantes;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
     }
@@ -418,7 +419,9 @@ public class TiposProductoController : ControllerBase
     {
         await _db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE \"TiposProducto\" ADD COLUMN IF NOT EXISTS \"CategoriasAplicables\" varchar(100) NULL");
-        return Ok(ApiResponse<object>.Ok("Columna agregada (o ya existía)"));
+        await _db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE \"TiposProducto\" ADD COLUMN IF NOT EXISTS \"SinVariantes\" boolean NOT NULL DEFAULT false");
+        return Ok(ApiResponse<object>.Ok("Columnas agregadas (o ya existían)"));
     }
 }
 
@@ -429,6 +432,7 @@ public class TipoProductoDto
     public string? Estado { get; set; }
     // Ej. "hombre,mujer" — null o vacio = aplica a todas las categorias
     public string? CategoriasAplicables { get; set; }
+    public bool SinVariantes { get; set; } = false;
 }
 
 // ─────────────────────────────────────────────

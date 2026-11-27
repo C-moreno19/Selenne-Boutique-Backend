@@ -15,5 +15,8 @@ public class TipoProducto
     // (ej. "hombre,mujer"). Null o vacio = aplica a todas las categorias.
     [MaxLength(100)]
     public string? CategoriasAplicables { get; set; }
+    // true = este tipo no usa tallas ni colores (ej. anillos, collares): el
+    // formulario de producto se simplifica a solo stock general + galeria de fotos.
+    public bool SinVariantes { get; set; } = false;
     public ICollection<Producto> Productos { get; set; } = new List<Producto>();
 }
