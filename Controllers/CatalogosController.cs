@@ -381,7 +381,7 @@ public class TiposProductoController : ControllerBase
     {
         if (await _db.TiposProducto.AnyAsync(t => t.Nombre == dto.Nombre))
             return BadRequest(ApiResponse<object>.Fail("Ya existe un tipo con ese nombre"));
-        var item = new TipoProducto { Nombre = dto.Nombre, Estado = "activo" };
+        var item = new TipoProducto { Nombre = dto.Nombre, Estado = "activo", CategoriasAplicables = dto.CategoriasAplicables };
         _db.TiposProducto.Add(item);
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
@@ -394,6 +394,7 @@ public class TiposProductoController : ControllerBase
         if (item == null) return NotFound(ApiResponse<object>.Fail("Tipo de producto no encontrado"));
         item.Nombre = dto.Nombre;
         if (dto.Estado != null) item.Estado = dto.Estado;
+        item.CategoriasAplicables = dto.CategoriasAplicables;
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok(item));
     }
@@ -407,6 +408,18 @@ public class TiposProductoController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(ApiResponse<object>.Ok("Tipo eliminado"));
     }
+
+    // Endpoint de un solo uso para agregar la columna CategoriasAplicables en
+    // la BD ya desplegada (este proyecto no usa migraciones de EF Core, el
+    // esquema se ajusta a mano). Llamar una vez tras desplegar y luego se
+    // puede borrar.
+    [HttpPost("_migrate-categorias-aplicables")]
+    public async Task<IActionResult> MigrateCategoriasAplicables()
+    {
+        await _db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE \"TiposProducto\" ADD COLUMN IF NOT EXISTS \"CategoriasAplicables\" varchar(100) NULL");
+        return Ok(ApiResponse<object>.Ok("Columna agregada (o ya existía)"));
+    }
 }
 
 public class TipoProductoDto
@@ -414,6 +427,8 @@ public class TipoProductoDto
     public string Nombre { get; set; } = string.Empty;
     public string? Descripcion { get; set; }
     public string? Estado { get; set; }
+    // Ej. "hombre,mujer" — null o vacio = aplica a todas las categorias
+    public string? CategoriasAplicables { get; set; }
 }
 
 // ─────────────────────────────────────────────
